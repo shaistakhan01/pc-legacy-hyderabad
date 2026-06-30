@@ -1,0 +1,17 @@
+{
+  "name": "pc-legacy-hyderabad",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hotel Management & Booking Web Application for PC Legacy Hyderabad",
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "build:frontend": "pnpm --filter frontend build",
+    "build:backend": "pnpm --filter backend build",
+    "install:all": "pnpm install"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "UNLICENSED"
+}
