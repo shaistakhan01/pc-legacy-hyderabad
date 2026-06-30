@@ -2,6 +2,7 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import healthRoutes from "./routes/health.routes.js";
 
 export function createApp(): Application {
   const app = express();
@@ -17,8 +18,7 @@ export function createApp(): Application {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Routes are mounted starting in Sub-Phase 0.6 (health check)
-  // and expanded in later phases.
+  app.use("/api/v1", healthRoutes);
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({
