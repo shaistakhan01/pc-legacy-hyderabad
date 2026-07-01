@@ -1,10 +1,28 @@
+@import "./tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html,
 body {
-  font-family: sans-serif;
-  background-color: #ffffff;
-  color: #1a1a1a;
+  font-family: var(--font-sans);
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-900);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+/* Visible focus ring on all interactive elements — design doc §8.
+   Never set outline: none without a visible replacement. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
