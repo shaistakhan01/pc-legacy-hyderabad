@@ -2,13 +2,17 @@ import { Routes, Route } from "react-router-dom";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { AdminLayout }  from "@/layouts/AdminLayout";
 import { Placeholder }  from "@/pages/public/Placeholder";
+import { Login } from "@/pages/public/Login";
+import { Register } from "@/pages/public/Register";
+import { ProtectedRoute } from "@/routes/ProtectedRoute";
+import { RoleBasedRoute } from "@/routes/RoleBasedRoute";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
 // Three route groups:
 //  1. Public routes     → PublicLayout (no auth required)
-//  2. Customer routes   → PublicLayout (ProtectedRoute added in Phase 3)
-//  3. Admin routes      → AdminLayout  (RoleBasedRoute added in Phase 3)
+//  2. Customer routes   → PublicLayout + ProtectedRoute (Phase 3)
+//  3. Admin routes      → AdminLayout  + RoleBasedRoute (Phase 3)
 //
 // All leaf components are Placeholder until their module phase is built.
 // The catch-all * route MUST remain last — React Router matches top-to-bottom.
@@ -36,50 +40,74 @@ export function AppRoutes() {
         <PublicLayout><Placeholder pageName="Meetings & Conference" /></PublicLayout>
       } />
       <Route path="/login" element={
-        <PublicLayout><Placeholder pageName="Login" /></PublicLayout>
+        <PublicLayout><Login /></PublicLayout>
       } />
       <Route path="/register" element={
-        <PublicLayout><Placeholder pageName="Register" /></PublicLayout>
+        <PublicLayout><Register /></PublicLayout>
       } />
 
-      {/* ── Customer portal routes (auth-protected in Phase 3) ────── */}
+      {/* ── Customer portal routes (auth-protected) ───────────────── */}
       <Route path="/account/bookings" element={
-        <PublicLayout><Placeholder pageName="My Bookings" /></PublicLayout>
+        <ProtectedRoute>
+          <PublicLayout><Placeholder pageName="My Bookings" /></PublicLayout>
+        </ProtectedRoute>
       } />
       <Route path="/account/bookings/:bookingId" element={
-        <PublicLayout><Placeholder pageName="Booking Detail" /></PublicLayout>
+        <ProtectedRoute>
+          <PublicLayout><Placeholder pageName="Booking Detail" /></PublicLayout>
+        </ProtectedRoute>
       } />
       <Route path="/account/profile" element={
-        <PublicLayout><Placeholder pageName="Profile & Preferences" /></PublicLayout>
+        <ProtectedRoute>
+          <PublicLayout><Placeholder pageName="Profile & Preferences" /></PublicLayout>
+        </ProtectedRoute>
       } />
 
-      {/* ── Admin portal routes (role-protected in Phase 3) ──────── */}
+      {/* ── Admin portal routes (role-protected) ──────────────────── */}
       <Route path="/admin" element={
-        <AdminLayout><Placeholder pageName="Admin Dashboard" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Admin Dashboard" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/rooms" element={
-        <AdminLayout><Placeholder pageName="Room Management" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Room Management" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/restaurant" element={
-        <AdminLayout><Placeholder pageName="Restaurant Management" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Restaurant Management" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/banquet" element={
-        <AdminLayout><Placeholder pageName="Banquet Management" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Banquet Management" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/conference" element={
-        <AdminLayout><Placeholder pageName="Conference Management" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Conference Management" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/guests" element={
-        <AdminLayout><Placeholder pageName="Guests / CRM" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Guests / CRM" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/staff" element={
-        <AdminLayout><Placeholder pageName="Staff & Roles" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Staff & Roles" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/reports" element={
-        <AdminLayout><Placeholder pageName="Reports & Analytics" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Reports & Analytics" /></AdminLayout>
+        </RoleBasedRoute>
       } />
       <Route path="/admin/settings" element={
-        <AdminLayout><Placeholder pageName="Settings" /></AdminLayout>
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><Placeholder pageName="Settings" /></AdminLayout>
+        </RoleBasedRoute>
       } />
 
       {/* ── 404 fallback — must be last ───────────────────────────── */}
