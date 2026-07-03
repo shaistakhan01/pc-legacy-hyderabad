@@ -7,6 +7,9 @@ import { Register } from "@/pages/public/Register";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { RoleBasedRoute } from "@/routes/RoleBasedRoute";
 import { AcceptInvite } from "@/pages/public/AcceptInvite";
+import { ForgotPassword } from "@/pages/public/ForgotPassword";
+import { ResetPassword } from "@/pages/public/ResetPassword";
+import { Profile } from "@/pages/account/Profile";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -43,6 +46,12 @@ export function AppRoutes() {
       <Route path="/login" element={
         <PublicLayout><Login /></PublicLayout>
       } />
+      <Route path="/forgot-password" element={
+        <PublicLayout><ForgotPassword /></PublicLayout>
+      } />
+      <Route path="/reset-password" element={
+        <PublicLayout><ResetPassword /></PublicLayout>
+      } />
       <Route path="/register" element={
         <PublicLayout><Register /></PublicLayout>
       } />
@@ -63,7 +72,7 @@ export function AppRoutes() {
       } />
       <Route path="/account/profile" element={
         <ProtectedRoute>
-          <PublicLayout><Placeholder pageName="Profile & Preferences" /></PublicLayout>
+          <PublicLayout><Profile /></PublicLayout>
         </ProtectedRoute>
       } />
 
