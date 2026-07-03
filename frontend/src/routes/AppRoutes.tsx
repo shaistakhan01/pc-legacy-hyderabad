@@ -6,6 +6,7 @@ import { Login } from "@/pages/public/Login";
 import { Register } from "@/pages/public/Register";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { RoleBasedRoute } from "@/routes/RoleBasedRoute";
+import { AcceptInvite } from "@/pages/public/AcceptInvite";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -44,6 +45,9 @@ export function AppRoutes() {
       } />
       <Route path="/register" element={
         <PublicLayout><Register /></PublicLayout>
+      } />
+      <Route path="/staff/accept-invite" element={
+        <PublicLayout><AcceptInvite /></PublicLayout>
       } />
 
       {/* ── Customer portal routes (auth-protected) ───────────────── */}
