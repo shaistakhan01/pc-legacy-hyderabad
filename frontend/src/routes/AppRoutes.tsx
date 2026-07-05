@@ -14,7 +14,7 @@ import { RoomListing } from "@/pages/public/RoomListing";
 import { RoomDetail } from "@/pages/public/RoomDetail";
 import { MyBookings } from "@/pages/account/MyBookings";
 import { RoomManagement } from "@/pages/admin/RoomManagement";
-
+import { Dining } from "@/pages/public/Dining";
 // Routing skeleton — Technical Plan Phase 1.4.
 //
 // Three route groups:
@@ -39,7 +39,10 @@ export function AppRoutes() {
         <PublicLayout><RoomDetail /></PublicLayout>
       } />
       <Route path="/dining" element={
-        <PublicLayout><Placeholder pageName="Restaurant & Reservations" /></PublicLayout>
+        <PublicLayout><Dining /></PublicLayout>
+      } />
+      <Route path="/dining/reserve" element={
+        <PublicLayout><Placeholder pageName="Reserve a Table" /></PublicLayout>
       } />
       <Route path="/events" element={
         <PublicLayout><Placeholder pageName="Banquet & Events" /></PublicLayout>
