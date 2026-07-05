@@ -6,6 +6,8 @@ import healthRoutes from "./routes/health.routes.js";
 import staffInvitesRoutes from "./routes/staffInvites.routes.js";
 import roomBookingsRoutes from "./routes/roomBookings.routes.js";
 import restaurantReservationsRoutes from "./routes/restaurantReservations.routes.js";
+import banquetBookingsRoutes from "./routes/banquetBookings.routes.js";
+
 
 
 export function createApp(): Application {
@@ -26,6 +28,8 @@ export function createApp(): Application {
   app.use("/api/v1/staff-invites", staffInvitesRoutes);
   app.use("/api/v1/room-bookings", roomBookingsRoutes);
   app.use("/api/v1/restaurant-reservations", restaurantReservationsRoutes);
+  app.use("/api/v1/banquet-bookings", banquetBookingsRoutes);
+
 
 
 

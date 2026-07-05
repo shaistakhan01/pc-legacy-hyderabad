@@ -18,6 +18,8 @@ import { Dining } from "@/pages/public/Dining";
 import { ReserveTable } from "@/pages/public/ReserveTable";
 import { RestaurantManagement } from "@/pages/admin/RestaurantManagement";
 import { Events } from "@/pages/public/Events";
+import { EventHallDetail } from "@/pages/public/EventHallDetail";
+
 
 
 // Routing skeleton — Technical Plan Phase 1.4.
@@ -53,7 +55,7 @@ export function AppRoutes() {
         <PublicLayout><Events /></PublicLayout>
       } />
       <Route path="/events/:hallId" element={
-        <PublicLayout><Placeholder pageName="Event Hall Detail" /></PublicLayout>
+        <PublicLayout><EventHallDetail /></PublicLayout>
       } />
       <Route path="/meetings" element={
         <PublicLayout><Placeholder pageName="Meetings & Conference" /></PublicLayout>
