@@ -235,6 +235,7 @@ export type Database = {
           capacity_max: number | null
           capacity_min: number | null
           id: string
+          image_url: string | null
           layout_options: string[]
           name: string
         }
@@ -243,6 +244,7 @@ export type Database = {
           capacity_max?: number | null
           capacity_min?: number | null
           id?: string
+          image_url?: string | null
           layout_options?: string[]
           name: string
         }
@@ -251,6 +253,7 @@ export type Database = {
           capacity_max?: number | null
           capacity_min?: number | null
           id?: string
+          image_url?: string | null
           layout_options?: string[]
           name?: string
         }
