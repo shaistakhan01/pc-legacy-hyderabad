@@ -15,6 +15,11 @@ import { RoomDetail } from "@/pages/public/RoomDetail";
 import { MyBookings } from "@/pages/account/MyBookings";
 import { RoomManagement } from "@/pages/admin/RoomManagement";
 import { Dining } from "@/pages/public/Dining";
+import { ReserveTable } from "@/pages/public/ReserveTable";
+import { RestaurantManagement } from "@/pages/admin/RestaurantManagement";
+
+
+
 // Routing skeleton — Technical Plan Phase 1.4.
 //
 // Three route groups:
@@ -42,7 +47,7 @@ export function AppRoutes() {
         <PublicLayout><Dining /></PublicLayout>
       } />
       <Route path="/dining/reserve" element={
-        <PublicLayout><Placeholder pageName="Reserve a Table" /></PublicLayout>
+        <PublicLayout><ReserveTable /></PublicLayout>
       } />
       <Route path="/events" element={
         <PublicLayout><Placeholder pageName="Banquet & Events" /></PublicLayout>
@@ -94,9 +99,9 @@ export function AppRoutes() {
           <AdminLayout><RoomManagement /></AdminLayout>
         </RoleBasedRoute>
       } />
-      <Route path="/admin/restaurant" element={
+     <Route path="/admin/restaurant" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
-          <AdminLayout><Placeholder pageName="Restaurant Management" /></AdminLayout>
+          <AdminLayout><RestaurantManagement /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/banquet" element={
