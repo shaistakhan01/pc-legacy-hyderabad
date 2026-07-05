@@ -5,6 +5,8 @@ import morgan from "morgan";
 import healthRoutes from "./routes/health.routes.js";
 import staffInvitesRoutes from "./routes/staffInvites.routes.js";
 import roomBookingsRoutes from "./routes/roomBookings.routes.js";
+import restaurantReservationsRoutes from "./routes/restaurantReservations.routes.js";
+
 
 export function createApp(): Application {
   const app = express();
@@ -21,8 +23,11 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/v1", healthRoutes);
-    app.use("/api/v1/staff-invites", staffInvitesRoutes);
-app.use("/api/v1/room-bookings", roomBookingsRoutes);
+  app.use("/api/v1/staff-invites", staffInvitesRoutes);
+  app.use("/api/v1/room-bookings", roomBookingsRoutes);
+  app.use("/api/v1/restaurant-reservations", restaurantReservationsRoutes);
+
+
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({
