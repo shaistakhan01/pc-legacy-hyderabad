@@ -10,6 +10,10 @@ import { AcceptInvite } from "@/pages/public/AcceptInvite";
 import { ForgotPassword } from "@/pages/public/ForgotPassword";
 import { ResetPassword } from "@/pages/public/ResetPassword";
 import { Profile } from "@/pages/account/Profile";
+import { RoomListing } from "@/pages/public/RoomListing";
+import { RoomDetail } from "@/pages/public/RoomDetail";
+import { MyBookings } from "@/pages/account/MyBookings";
+import { RoomManagement } from "@/pages/admin/RoomManagement";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -29,10 +33,10 @@ export function AppRoutes() {
         <PublicLayout><Placeholder pageName="Home" /></PublicLayout>
       } />
       <Route path="/rooms" element={
-        <PublicLayout><Placeholder pageName="Room Listing" /></PublicLayout>
+        <PublicLayout><RoomListing /></PublicLayout>
       } />
-      <Route path="/rooms/:roomId" element={
-        <PublicLayout><Placeholder pageName="Room Detail" /></PublicLayout>
+        <Route path="/rooms/:roomId" element={
+        <PublicLayout><RoomDetail /></PublicLayout>
       } />
       <Route path="/dining" element={
         <PublicLayout><Placeholder pageName="Restaurant & Reservations" /></PublicLayout>
@@ -60,9 +64,9 @@ export function AppRoutes() {
       } />
 
       {/* ── Customer portal routes (auth-protected) ───────────────── */}
-      <Route path="/account/bookings" element={
+     <Route path="/account/bookings" element={
         <ProtectedRoute>
-          <PublicLayout><Placeholder pageName="My Bookings" /></PublicLayout>
+          <PublicLayout><MyBookings /></PublicLayout>
         </ProtectedRoute>
       } />
       <Route path="/account/bookings/:bookingId" element={
@@ -84,7 +88,7 @@ export function AppRoutes() {
       } />
       <Route path="/admin/rooms" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
-          <AdminLayout><Placeholder pageName="Room Management" /></AdminLayout>
+          <AdminLayout><RoomManagement /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/restaurant" element={
