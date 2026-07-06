@@ -1,8 +1,13 @@
 import { Router } from "express";
-import { getAvailability } from "../controllers/conferenceBookings.controller.js";
+import { requireAuth } from "../middleware/requireAuth.js";
+import {
+  getAvailability,
+  createBooking,
+} from "../controllers/conferenceBookings.controller.js";
 
 const router = Router();
 
 router.get("/availability", getAvailability);
+router.post("/", requireAuth, createBooking);
 
 export default router;
