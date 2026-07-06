@@ -19,7 +19,7 @@ import { ReserveTable } from "@/pages/public/ReserveTable";
 import { RestaurantManagement } from "@/pages/admin/RestaurantManagement";
 import { Events } from "@/pages/public/Events";
 import { EventHallDetail } from "@/pages/public/EventHallDetail";
-
+import { BanquetManagement } from "@/pages/admin/BanquetManagement";
 
 
 // Routing skeleton — Technical Plan Phase 1.4.
@@ -111,7 +111,7 @@ export function AppRoutes() {
       } />
       <Route path="/admin/banquet" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
-          <AdminLayout><Placeholder pageName="Banquet Management" /></AdminLayout>
+          <AdminLayout><BanquetManagement /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/conference" element={
