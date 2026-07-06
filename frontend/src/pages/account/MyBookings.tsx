@@ -28,6 +28,21 @@ interface RestaurantBookingRow {
   } | null;
 }
 
+interface BanquetBookingRow {
+  id: string;
+  reference_number: string;
+  status: string;
+  total_amount: number;
+  banquet_bookings: {
+    event_date: string;
+    start_time: string;
+    end_time: string;
+    event_type: string | null;
+    guest_count: number;
+    event_halls: { name: string } | null;
+  } | null;
+}
+
 const statusToBadge: Record<string, "success" | "warning" | "error" | "info" | "neutral"> = {
   confirmed: "success",
   pending: "warning",
@@ -59,7 +74,8 @@ function RoomBookingsTab() {
   }, [user]);
 
   if (loading) return <p className="text-neutral-700">Loading...</p>;
-  if (bookings.length === 0) return <p className="text-neutral-700">You haven't made any room bookings yet.</p>;
+  if (bookings.length === 0)
+    return <p className="text-neutral-700">You haven't made any room bookings yet.</p>;
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,13 +89,20 @@ function RoomBookingsTab() {
                   {detail?.rooms?.room_types?.name ?? "Room"}
                 </h3>
                 <p className="text-sm text-neutral-700">
-                  Room {detail?.rooms?.room_number} · {detail?.num_guests} guest{detail?.num_guests === 1 ? "" : "s"}
+                  Room {detail?.rooms?.room_number} · {detail?.num_guests} guest
+                  {detail?.num_guests === 1 ? "" : "s"}
                 </p>
-                <p className="text-sm text-neutral-700">{detail?.check_in} → {detail?.check_out}</p>
-                <p className="mt-1 text-xs text-neutral-400">Ref: {booking.reference_number}</p>
+                <p className="text-sm text-neutral-700">
+                  {detail?.check_in} → {detail?.check_out}
+                </p>
+                <p className="mt-1 text-xs text-neutral-400">
+                  Ref: {booking.reference_number}
+                </p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge status={statusToBadge[booking.status] ?? "neutral"}>{booking.status.replace("_", " ")}</Badge>
+                <Badge status={statusToBadge[booking.status] ?? "neutral"}>
+                  {booking.status.replace("_", " ")}
+                </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
               </div>
             </div>
@@ -112,7 +135,8 @@ function RestaurantBookingsTab() {
   }, [user]);
 
   if (loading) return <p className="text-neutral-700">Loading...</p>;
-  if (bookings.length === 0) return <p className="text-neutral-700">You haven't made any reservations yet.</p>;
+  if (bookings.length === 0)
+    return <p className="text-neutral-700">You haven't made any reservations yet.</p>;
 
   return (
     <div className="flex flex-col gap-4">
@@ -126,12 +150,76 @@ function RestaurantBookingsTab() {
                   Table {detail?.restaurant_tables?.table_number ?? "—"}
                 </h3>
                 <p className="text-sm text-neutral-700">
-                  {detail?.reservation_date} at {detail?.reservation_time} · {detail?.party_size} guest
-                  {detail?.party_size === 1 ? "" : "s"}
+                  {detail?.reservation_date} at {detail?.reservation_time} · {detail?.party_size}{" "}
+                  guest{detail?.party_size === 1 ? "" : "s"}
                 </p>
-                <p className="mt-1 text-xs text-neutral-400">Ref: {booking.reference_number}</p>
+                <p className="mt-1 text-xs text-neutral-400">
+                  Ref: {booking.reference_number}
+                </p>
               </div>
-              <Badge status={statusToBadge[booking.status] ?? "neutral"}>{booking.status.replace("_", " ")}</Badge>
+              <Badge status={statusToBadge[booking.status] ?? "neutral"}>
+                {booking.status.replace("_", " ")}
+              </Badge>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function BanquetBookingsTab() {
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<BanquetBookingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("bookings")
+      .select(
+        `id, reference_number, status, total_amount,
+         banquet_bookings ( event_date, start_time, end_time, event_type, guest_count, event_halls ( name ) )`
+      )
+      .eq("module_type", "banquet")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setBookings(data as unknown as BanquetBookingRow[]);
+        setLoading(false);
+      });
+  }, [user]);
+
+  if (loading) return <p className="text-neutral-700">Loading...</p>;
+  if (bookings.length === 0)
+    return <p className="text-neutral-700">You haven't booked any events yet.</p>;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {bookings.map((booking) => {
+        const detail = booking.banquet_bookings;
+        return (
+          <Card key={booking.id}>
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-heading text-lg text-neutral-900">
+                  {detail?.event_halls?.name ?? "Venue"}
+                </h3>
+                <p className="text-sm text-neutral-700">
+                  {detail?.event_type} · {detail?.guest_count} guests
+                </p>
+                <p className="text-sm text-neutral-700">
+                  {detail?.event_date} · {detail?.start_time} – {detail?.end_time}
+                </p>
+                <p className="mt-1 text-xs text-neutral-400">
+                  Ref: {booking.reference_number}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <Badge status={statusToBadge[booking.status] ?? "neutral"}>
+                  {booking.status.replace("_", " ")}
+                </Badge>
+                <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+              </div>
             </div>
           </Card>
         );
@@ -148,6 +236,7 @@ export function MyBookings() {
         items={[
           { id: "rooms", label: "Rooms", content: <RoomBookingsTab /> },
           { id: "dining", label: "Dining", content: <RestaurantBookingsTab /> },
+          { id: "events", label: "Events", content: <BanquetBookingsTab /> },
         ]}
       />
     </div>
