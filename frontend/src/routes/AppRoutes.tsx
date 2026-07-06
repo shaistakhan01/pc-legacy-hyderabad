@@ -22,6 +22,7 @@ import { EventHallDetail } from "@/pages/public/EventHallDetail";
 import { BanquetManagement } from "@/pages/admin/BanquetManagement";
 import { Meetings } from "@/pages/public/Meetings";
 import { ConferenceRoomDetail } from "@/pages/public/ConferenceRoomDetail";
+import { ConferenceManagement } from "@/pages/admin/ConferenceManagement";
 
 
 // Routing skeleton — Technical Plan Phase 1.4.
@@ -119,9 +120,9 @@ export function AppRoutes() {
           <AdminLayout><BanquetManagement /></AdminLayout>
         </RoleBasedRoute>
       } />
-      <Route path="/admin/conference" element={
+     <Route path="/admin/conference" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
-          <AdminLayout><Placeholder pageName="Conference Management" /></AdminLayout>
+          <AdminLayout><ConferenceManagement /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/guests" element={
