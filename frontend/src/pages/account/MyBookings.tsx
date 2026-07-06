@@ -43,6 +43,22 @@ interface BanquetBookingRow {
   } | null;
 }
 
+interface ConferenceBookingRow {
+  id: string;
+  reference_number: string;
+  status: string;
+  total_amount: number;
+  conference_bookings: {
+    date: string;
+    start_time: string;
+    end_time: string;
+    purpose: string | null;
+    attendee_count: number;
+    catering_required: boolean;
+    conference_rooms: { name: string } | null;
+  } | null;
+}
+
 const statusToBadge: Record<string, "success" | "warning" | "error" | "info" | "neutral"> = {
   confirmed: "success",
   pending: "warning",
@@ -228,6 +244,70 @@ function BanquetBookingsTab() {
   );
 }
 
+function ConferenceBookingsTab() {
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<ConferenceBookingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("bookings")
+      .select(
+        `id, reference_number, status, total_amount,
+         conference_bookings ( date, start_time, end_time, purpose, attendee_count, catering_required, conference_rooms ( name ) )`
+      )
+      .eq("module_type", "conference")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setBookings(data as unknown as ConferenceBookingRow[]);
+        setLoading(false);
+      });
+  }, [user]);
+
+  if (loading) return <p className="text-neutral-700">Loading...</p>;
+  if (bookings.length === 0)
+    return <p className="text-neutral-700">You haven't booked any meeting rooms yet.</p>;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {bookings.map((booking) => {
+        const detail = booking.conference_bookings;
+        return (
+          <Card key={booking.id}>
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-heading text-lg text-neutral-900">
+                  {detail?.conference_rooms?.name ?? "Room"}
+                </h3>
+                <p className="text-sm text-neutral-700">
+                  {detail?.purpose} · {detail?.attendee_count} attendee
+                  {detail?.attendee_count === 1 ? "" : "s"}
+                </p>
+                <p className="text-sm text-neutral-700">
+                  {detail?.date} · {detail?.start_time} – {detail?.end_time}
+                </p>
+                {detail?.catering_required && (
+                  <Badge status="info">Catering requested</Badge>
+                )}
+                <p className="mt-1 text-xs text-neutral-400">
+                  Ref: {booking.reference_number}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <Badge status={statusToBadge[booking.status] ?? "neutral"}>
+                  {booking.status.replace("_", " ")}
+                </Badge>
+                <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 export function MyBookings() {
   return (
     <div className="mx-auto max-w-content px-6 py-12">
@@ -237,6 +317,7 @@ export function MyBookings() {
           { id: "rooms", label: "Rooms", content: <RoomBookingsTab /> },
           { id: "dining", label: "Dining", content: <RestaurantBookingsTab /> },
           { id: "events", label: "Events", content: <BanquetBookingsTab /> },
+          { id: "meetings", label: "Meetings", content: <ConferenceBookingsTab /> },
         ]}
       />
     </div>
