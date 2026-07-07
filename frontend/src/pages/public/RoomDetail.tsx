@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { checkAvailability, createRoomBooking } from "@/services/roomBookings";
 import { Button, DatePicker, Select, Card, Badge, Toast } from "@/components/common";
 import type { Database } from "@/types/database.types";
+import { createPaymentIntent } from "@/services/payments";
+import { StripeCheckoutModal } from "@/components/payments/StripeCheckoutModal";
 
 type RoomType = Database["public"]["Tables"]["room_types"]["Row"];
 
@@ -26,6 +28,8 @@ export function RoomDetail() {
   const [isChecking, setIsChecking] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -71,6 +75,25 @@ export function RoomDetail() {
       navigate("/login");
       return;
     }
+    if (!roomId || !availability) return;
+
+    setIsBooking(true);
+    setStatusMessage("");
+
+    const intentResult = await createPaymentIntent(availability.totalAmount, "room");
+    setIsBooking(false);
+
+    if (!intentResult.success) {
+      setStatusMessage(intentResult.message ?? "Could not initiate payment.");
+      return;
+    }
+
+    setClientSecret(intentResult.clientSecret);
+    setShowPaymentModal(true);
+  }
+
+  async function handlePaymentSuccess(paymentIntentId: string) {
+    setShowPaymentModal(false);
     if (!roomId) return;
 
     setIsBooking(true);
@@ -79,6 +102,7 @@ export function RoomDetail() {
       checkIn,
       checkOut,
       numGuests: Number(numGuests),
+      paymentIntentId,
     });
     setIsBooking(false);
 
@@ -100,7 +124,11 @@ export function RoomDetail() {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <div>
           {roomType.image_url ? (
-            <img src={roomType.image_url} alt={roomType.name} className="w-full rounded-md object-cover" />
+            <img
+              src={roomType.image_url}
+              alt={roomType.name}
+              className="w-full rounded-md object-cover"
+            />
           ) : (
             <div className="flex h-64 items-center justify-center rounded-md bg-neutral-200 text-neutral-400">
               No Image
@@ -121,8 +149,16 @@ export function RoomDetail() {
         <Card>
           <h2 className="mb-4 font-heading text-xl text-neutral-900">Check Availability</h2>
           <div className="flex flex-col gap-4">
-            <DatePicker label="Check-in" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
-            <DatePicker label="Check-out" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+            <DatePicker
+              label="Check-in"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+            />
+            <DatePicker
+              label="Check-out"
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+            />
             <Select
               label="Guests"
               value={numGuests}
@@ -132,11 +168,17 @@ export function RoomDetail() {
                 label: `${i + 1} guest${i === 0 ? "" : "s"}`,
               }))}
             />
-            <Button onClick={handleCheckAvailability} isLoading={isChecking} variant="secondary">
+            <Button
+              onClick={handleCheckAvailability}
+              isLoading={isChecking}
+              variant="secondary"
+            >
               Check Availability
             </Button>
 
-            {statusMessage && <p className="text-sm text-error">{statusMessage}</p>}
+            {statusMessage && (
+              <p className="text-sm text-error">{statusMessage}</p>
+            )}
 
             {availability?.available && (
               <div className="rounded-sm bg-neutral-100 p-4">
@@ -144,7 +186,11 @@ export function RoomDetail() {
                   {availability.nights} night{availability.nights === 1 ? "" : "s"} · Total:{" "}
                   <strong className="text-primary">₹{availability.totalAmount}</strong>
                 </p>
-                <Button onClick={handleBookNow} isLoading={isBooking} className="mt-3 w-full">
+                <Button
+                  onClick={handleBookNow}
+                  isLoading={isBooking}
+                  className="mt-3 w-full"
+                >
                   {user ? "Book Now" : "Log In to Book"}
                 </Button>
               </div>
@@ -152,6 +198,14 @@ export function RoomDetail() {
           </div>
         </Card>
       </div>
+
+      <StripeCheckoutModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        clientSecret={clientSecret}
+        amountLabel={`Room Booking · ₹${availability?.totalAmount ?? 0}`}
+        onSuccess={handlePaymentSuccess}
+      />
 
       {showSuccessToast && (
         <div className="fixed bottom-6 right-6 z-50 max-w-sm">

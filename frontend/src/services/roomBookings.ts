@@ -28,6 +28,7 @@ export interface CreateBookingPayload {
   checkOut: string;
   numGuests: number;
   specialRequests?: string;
+  paymentIntentId: string;
 }
 
 export async function createRoomBooking(payload: CreateBookingPayload) {

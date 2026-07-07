@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabaseClient.js";
 import { checkRoomAvailability, generateReferenceNumber } from "../services/roomAvailability.service.js";
+import { verifyPayment } from "../services/paymentVerification.service.js";
 
 // GET /api/v1/room-bookings/availability?roomTypeId=&checkIn=&checkOut=
 // Public — no auth required, just checking if dates are bookable.
@@ -30,12 +31,20 @@ export async function getAvailability(req: Request, res: Response) {
 // Re-checks availability server-side (never trust a client-reported
 // "it was available a minute ago") before writing anything.
 export async function createBooking(req: Request, res: Response) {
-  const { roomTypeId, checkIn, checkOut, numGuests, specialRequests } = req.body as {
+  const {
+    roomTypeId,
+    checkIn,
+    checkOut,
+    numGuests,
+    specialRequests,
+    paymentIntentId,
+  } = req.body as {
     roomTypeId?: string;
     checkIn?: string;
     checkOut?: string;
     numGuests?: number;
     specialRequests?: string;
+    paymentIntentId?: string;
   };
 
   if (!roomTypeId || !checkIn || !checkOut || !numGuests) {
@@ -45,15 +54,36 @@ export async function createBooking(req: Request, res: Response) {
     });
   }
 
+  if (!paymentIntentId) {
+    return res.status(400).json({
+      success: false,
+      message: "Payment is required to complete this booking.",
+    });
+  }
+
   let availability;
   try {
     availability = await checkRoomAvailability(roomTypeId, checkIn, checkOut);
   } catch (err) {
-    return res.status(400).json({ success: false, message: err instanceof Error ? err.message : "Availability check failed." });
+    return res.status(400).json({
+      success: false,
+      message: err instanceof Error ? err.message : "Availability check failed.",
+    });
   }
 
   if (!availability.available || !availability.roomId) {
-    return res.status(409).json({ success: false, message: "This room is no longer available for the selected dates." });
+    return res.status(409).json({
+      success: false,
+      message: "This room is no longer available for the selected dates.",
+    });
+  }
+
+  const paymentCheck = await verifyPayment(paymentIntentId, availability.totalAmount);
+  if (!paymentCheck.isValid) {
+    return res.status(400).json({
+      success: false,
+      message: paymentCheck.reason ?? "Payment verification failed.",
+    });
   }
 
   const referenceNumber = generateReferenceNumber("RM");
@@ -71,7 +101,10 @@ export async function createBooking(req: Request, res: Response) {
     .single();
 
   if (bookingError || !booking) {
-    return res.status(500).json({ success: false, message: bookingError?.message ?? "Failed to create booking." });
+    return res.status(500).json({
+      success: false,
+      message: bookingError?.message ?? "Failed to create booking.",
+    });
   }
 
   const { data: roomBooking, error: roomBookingError } = await supabaseAdmin
@@ -88,12 +121,20 @@ export async function createBooking(req: Request, res: Response) {
     .single();
 
   if (roomBookingError || !roomBooking) {
-    // Roll back the parent booking row since the detail row failed —
-    // supabase-js has no multi-table transaction API, so this manual
-    // cleanup step keeps the ledger consistent.
     await supabaseAdmin.from("bookings").delete().eq("id", booking.id);
-    return res.status(500).json({ success: false, message: roomBookingError?.message ?? "Failed to create room booking detail." });
+    return res.status(500).json({
+      success: false,
+      message: roomBookingError?.message ?? "Failed to create room booking detail.",
+    });
   }
+
+  await supabaseAdmin.from("payment_transactions").insert({
+    booking_id: booking.id,
+    gateway_reference: paymentIntentId,
+    status: "success",
+    amount: availability.totalAmount,
+    method: "stripe",
+  });
 
   res.status(201).json({ success: true, booking, roomBooking });
 }

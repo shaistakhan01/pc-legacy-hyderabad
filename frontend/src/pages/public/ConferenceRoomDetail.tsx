@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { checkConferenceAvailability, createConferenceBooking } from "@/services/conferenceBookings";
 import { Button, DatePicker, Input, Card, Badge, Toast } from "@/components/common";
 import type { Database } from "@/types/database.types";
+import { createPaymentIntent } from "@/services/payments";
+import { StripeCheckoutModal } from "@/components/payments/StripeCheckoutModal";
 
 type ConferenceRoom = Database["public"]["Tables"]["conference_rooms"]["Row"];
 
@@ -25,6 +27,8 @@ export function ConferenceRoomDetail() {
   const [isChecking, setIsChecking] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -61,6 +65,25 @@ export function ConferenceRoomDetail() {
       navigate("/login");
       return;
     }
+    if (!roomId || !availability) return;
+
+    setIsBooking(true);
+    setStatusMessage("");
+
+    const intentResult = await createPaymentIntent(availability.totalAmount, "conference");
+    setIsBooking(false);
+
+    if (!intentResult.success) {
+      setStatusMessage(intentResult.message ?? "Could not initiate payment.");
+      return;
+    }
+
+    setClientSecret(intentResult.clientSecret);
+    setShowPaymentModal(true);
+  }
+
+  async function handlePaymentSuccess(paymentIntentId: string) {
+    setShowPaymentModal(false);
     if (!roomId) return;
 
     setIsBooking(true);
@@ -72,6 +95,7 @@ export function ConferenceRoomDetail() {
       purpose,
       attendeeCount: Number(attendeeCount),
       cateringRequired,
+      paymentIntentId,
     });
     setIsBooking(false);
 
@@ -138,6 +162,14 @@ export function ConferenceRoomDetail() {
           </div>
         </Card>
       </div>
+
+      <StripeCheckoutModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        clientSecret={clientSecret}
+        amountLabel={`${room.name} · ₹${availability?.totalAmount ?? 0}`}
+        onSuccess={handlePaymentSuccess}
+      />
 
       {showSuccessToast && (
         <div className="fixed bottom-6 right-6 z-50 max-w-sm">

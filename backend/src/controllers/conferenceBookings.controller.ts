@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabaseClient.js";
 import { checkConferenceAvailability } from "../services/conferenceAvailability.service.js";
 import { generateReferenceNumber } from "../services/roomAvailability.service.js";
+import { verifyPayment } from "../services/paymentVerification.service.js";
 
 // GET /api/v1/conference-bookings/availability
 // Public — no auth required.
@@ -40,16 +41,16 @@ export async function getAvailability(req: Request, res: Response) {
 
 // POST /api/v1/conference-bookings — requires auth (any logged-in user).
 export async function createBooking(req: Request, res: Response) {
-  const { roomId, date, startTime, endTime, purpose, attendeeCount, cateringRequired } =
-    req.body as {
-      roomId?: string;
-      date?: string;
-      startTime?: string;
-      endTime?: string;
-      purpose?: string;
-      attendeeCount?: number;
-      cateringRequired?: boolean;
-    };
+  const { roomId, date, startTime, endTime, purpose, attendeeCount, cateringRequired, paymentIntentId } = req.body as {
+    roomId?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    purpose?: string;
+    attendeeCount?: number;
+    cateringRequired?: boolean;
+    paymentIntentId?: string;
+  };
 
   if (!roomId || !date || !startTime || !endTime || !attendeeCount) {
     return res.status(400).json({
@@ -58,33 +59,31 @@ export async function createBooking(req: Request, res: Response) {
     });
   }
 
-  // Re-validate availability server-side — never trust the client's check.
-  let availability;
-  try {
-    availability = await checkConferenceAvailability(
-      roomId,
-      date,
-      startTime,
-      endTime,
-      attendeeCount
-    );
-  } catch (err) {
+  if (!paymentIntentId) {
     return res.status(400).json({
       success: false,
-      message: err instanceof Error ? err.message : "Availability check failed.",
+      message: "Payment is required to complete this booking.",
     });
   }
 
+  let availability;
+  try {
+    availability = await checkConferenceAvailability(roomId, date, startTime, endTime, attendeeCount);
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err instanceof Error ? err.message : "Availability check failed." });
+  }
+
   if (!availability.available) {
-    return res.status(409).json({
-      success: false,
-      message: availability.reason ?? "This room is not available.",
-    });
+    return res.status(409).json({ success: false, message: availability.reason ?? "This room is not available." });
+  }
+
+  const paymentCheck = await verifyPayment(paymentIntentId, availability.totalAmount);
+  if (!paymentCheck.isValid) {
+    return res.status(400).json({ success: false, message: paymentCheck.reason ?? "Payment verification failed." });
   }
 
   const referenceNumber = generateReferenceNumber("CF");
 
-  // Create the parent bookings row first.
   const { data: booking, error: bookingError } = await supabaseAdmin
     .from("bookings")
     .insert({
@@ -98,13 +97,9 @@ export async function createBooking(req: Request, res: Response) {
     .single();
 
   if (bookingError || !booking) {
-    return res.status(500).json({
-      success: false,
-      message: bookingError?.message ?? "Failed to create booking.",
-    });
+    return res.status(500).json({ success: false, message: bookingError?.message ?? "Failed to create booking." });
   }
 
-  // Create the conference_bookings detail row.
   const { data: conferenceBooking, error: conferenceBookingError } = await supabaseAdmin
     .from("conference_bookings")
     .insert({
@@ -121,13 +116,17 @@ export async function createBooking(req: Request, res: Response) {
     .single();
 
   if (conferenceBookingError || !conferenceBooking) {
-    // Roll back the parent booking row to avoid orphaned records.
     await supabaseAdmin.from("bookings").delete().eq("id", booking.id);
-    return res.status(500).json({
-      success: false,
-      message: conferenceBookingError?.message ?? "Failed to create conference booking.",
-    });
+    return res.status(500).json({ success: false, message: conferenceBookingError?.message ?? "Failed to create conference booking." });
   }
+
+  await supabaseAdmin.from("payment_transactions").insert({
+    booking_id: booking.id,
+    gateway_reference: paymentIntentId,
+    status: "success",
+    amount: availability.totalAmount,
+    method: "stripe",
+  });
 
   res.status(201).json({ success: true, booking, conferenceBooking });
 }

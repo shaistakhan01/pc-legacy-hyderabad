@@ -42,6 +42,7 @@ export interface CreateBanquetBookingPayload {
   eventType: string;
   guestCount: number;
   addOnIds: string[];
+  paymentIntentId: string;
 }
 
 export async function createBanquetBooking(payload: CreateBanquetBookingPayload) {

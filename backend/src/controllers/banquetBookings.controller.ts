@@ -5,6 +5,7 @@ import {
   calculateAddOnsCost,
 } from "../services/banquetAvailability.service.js";
 import { generateReferenceNumber } from "../services/roomAvailability.service.js";
+import { verifyPayment } from "../services/paymentVerification.service.js";
 
 // GET /api/v1/banquet-bookings/availability
 // Public — no auth required.
@@ -58,16 +59,16 @@ export async function listAddOns(_req: Request, res: Response) {
 
 // POST /api/v1/banquet-bookings — requires auth (any logged-in user).
 export async function createBooking(req: Request, res: Response) {
-  const { hallId, eventDate, startTime, endTime, eventType, guestCount, addOnIds } =
-    req.body as {
-      hallId?: string;
-      eventDate?: string;
-      startTime?: string;
-      endTime?: string;
-      eventType?: string;
-      guestCount?: number;
-      addOnIds?: string[];
-    };
+  const { hallId, eventDate, startTime, endTime, eventType, guestCount, addOnIds, paymentIntentId } = req.body as {
+    hallId?: string;
+    eventDate?: string;
+    startTime?: string;
+    endTime?: string;
+    eventType?: string;
+    guestCount?: number;
+    addOnIds?: string[];
+    paymentIntentId?: string;
+  };
 
   if (!hallId || !eventDate || !startTime || !endTime || !guestCount) {
     return res.status(400).json({
@@ -76,34 +77,26 @@ export async function createBooking(req: Request, res: Response) {
     });
   }
 
-  // Re-validate availability server-side — never trust the client's check.
-  let availability;
-  try {
-    availability = await checkHallAvailability(
-      hallId,
-      eventDate,
-      startTime,
-      endTime,
-      guestCount
-    );
-  } catch (err) {
+  if (!paymentIntentId) {
     return res.status(400).json({
       success: false,
-      message: err instanceof Error ? err.message : "Availability check failed.",
+      message: "Payment is required to complete this booking.",
     });
+  }
+
+  let availability;
+  try {
+    availability = await checkHallAvailability(hallId, eventDate, startTime, endTime, guestCount);
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err instanceof Error ? err.message : "Availability check failed." });
   }
 
   if (!availability.available) {
-    return res.status(409).json({
-      success: false,
-      message: availability.reason ?? "This hall is not available.",
-    });
+    return res.status(409).json({ success: false, message: availability.reason ?? "This hall is not available." });
   }
 
-  // Recalculate add-ons cost server-side — never trust a client-submitted total.
   let addOnsCost = 0;
   const validAddOnIds = addOnIds ?? [];
-
   if (validAddOnIds.length > 0) {
     const { data: selectedAddOns, error: addOnsError } = await supabaseAdmin
       .from("hall_add_ons")
@@ -118,9 +111,14 @@ export async function createBooking(req: Request, res: Response) {
   }
 
   const totalAmount = availability.basePrice + addOnsCost;
+
+  const paymentCheck = await verifyPayment(paymentIntentId, totalAmount);
+  if (!paymentCheck.isValid) {
+    return res.status(400).json({ success: false, message: paymentCheck.reason ?? "Payment verification failed." });
+  }
+
   const referenceNumber = generateReferenceNumber("BQ");
 
-  // Create the parent bookings row first.
   const { data: booking, error: bookingError } = await supabaseAdmin
     .from("bookings")
     .insert({
@@ -134,13 +132,9 @@ export async function createBooking(req: Request, res: Response) {
     .single();
 
   if (bookingError || !booking) {
-    return res.status(500).json({
-      success: false,
-      message: bookingError?.message ?? "Failed to create booking.",
-    });
+    return res.status(500).json({ success: false, message: bookingError?.message ?? "Failed to create booking." });
   }
 
-  // Create the banquet_bookings detail row.
   const { data: banquetBooking, error: banquetBookingError } = await supabaseAdmin
     .from("banquet_bookings")
     .insert({
@@ -157,13 +151,17 @@ export async function createBooking(req: Request, res: Response) {
     .single();
 
   if (banquetBookingError || !banquetBooking) {
-    // Roll back the parent booking row to avoid orphaned records.
     await supabaseAdmin.from("bookings").delete().eq("id", booking.id);
-    return res.status(500).json({
-      success: false,
-      message: banquetBookingError?.message ?? "Failed to create banquet booking.",
-    });
+    return res.status(500).json({ success: false, message: banquetBookingError?.message ?? "Failed to create banquet booking." });
   }
+
+  await supabaseAdmin.from("payment_transactions").insert({
+    booking_id: booking.id,
+    gateway_reference: paymentIntentId,
+    status: "success",
+    amount: totalAmount,
+    method: "stripe",
+  });
 
   res.status(201).json({ success: true, booking, banquetBooking });
 }

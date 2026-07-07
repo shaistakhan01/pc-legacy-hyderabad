@@ -32,6 +32,7 @@ export interface CreateConferenceBookingPayload {
   purpose: string;
   attendeeCount: number;
   cateringRequired: boolean;
+  paymentIntentId: string;
 }
 
 export async function createConferenceBooking(payload: CreateConferenceBookingPayload) {
