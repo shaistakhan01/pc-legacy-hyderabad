@@ -23,7 +23,7 @@ import { BanquetManagement } from "@/pages/admin/BanquetManagement";
 import { Meetings } from "@/pages/public/Meetings";
 import { ConferenceRoomDetail } from "@/pages/public/ConferenceRoomDetail";
 import { ConferenceManagement } from "@/pages/admin/ConferenceManagement";
-
+import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -138,6 +138,11 @@ export function AppRoutes() {
       <Route path="/admin/reports" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
           <AdminLayout><Placeholder pageName="Reports & Analytics" /></AdminLayout>
+        </RoleBasedRoute>
+      } />
+      <Route path="/admin/payments" element={
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><PaymentsOverview /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/settings" element={

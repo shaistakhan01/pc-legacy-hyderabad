@@ -8,6 +8,8 @@ const navItems = [
   { label: "Staff & Roles",            href: "#" },
   { label: "Reports & Analytics",      href: "/admin/reports" },
   { label: "Settings",                 href: "#" },
+  { label: "Payments",                 href: "/admin/payments" },
+
 ];
 
 // Admin persistent left sidebar — design doc §3.1.B.
