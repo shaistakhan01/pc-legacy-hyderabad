@@ -20,4 +20,11 @@ export const env = {
   // value or send it to the frontend under any circumstance.
   SUPABASE_SECRET_KEY: requireEnv("SUPABASE_SECRET_KEY"),
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? "http://localhost:5173",
+
+  STRIPE_SECRET_KEY: requireEnv("STRIPE_SECRET_KEY"),
+  STRIPE_CURRENCY: process.env.STRIPE_CURRENCY ?? "usd",
+
+
+
+
 };

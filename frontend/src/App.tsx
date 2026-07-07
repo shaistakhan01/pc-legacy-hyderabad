@@ -1,10 +1,14 @@
 import { BrowserRouter } from "react-router-dom";
+import { Elements } from "@stripe/react-stripe-js";
+import { stripePromise } from "@/lib/stripeClient";
 import { AppRoutes } from "@/routes/AppRoutes";
 
 function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <Elements stripe={stripePromise}>
+        <AppRoutes />
+      </Elements>
     </BrowserRouter>
   );
 }
