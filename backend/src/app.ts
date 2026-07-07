@@ -8,7 +8,7 @@ import roomBookingsRoutes from "./routes/roomBookings.routes.js";
 import restaurantReservationsRoutes from "./routes/restaurantReservations.routes.js";
 import banquetBookingsRoutes from "./routes/banquetBookings.routes.js";
 import conferenceBookingsRoutes from "./routes/conferenceBookings.routes.js";
-
+import paymentsRoutes from "./routes/payments.routes.js";
 
 export function createApp(): Application {
   const app = express();
@@ -30,6 +30,7 @@ export function createApp(): Application {
   app.use("/api/v1/restaurant-reservations", restaurantReservationsRoutes);
   app.use("/api/v1/banquet-bookings", banquetBookingsRoutes);
   app.use("/api/v1/conference-bookings", conferenceBookingsRoutes);
+  app.use("/api/v1/payments", paymentsRoutes);
 
 
 
