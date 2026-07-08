@@ -5,7 +5,10 @@ export async function createInvite(req: Request, res: Response) {
   const { email, role } = req.body as { email?: string; role?: string };
 
   if (!email || !role || !["staff", "admin"].includes(role)) {
-    return res.status(400).json({ success: false, message: "email and a valid role ('staff' or 'admin') are required." });
+    return res.status(400).json({
+      success: false,
+      message: "email and a valid role ('staff' or 'admin') are required.",
+    });
   }
 
   const { data, error } = await supabaseAdmin
@@ -34,11 +37,17 @@ export async function getInviteByToken(req: Request, res: Response) {
     .single();
 
   if (error || !data) {
-    return res.status(404).json({ success: false, message: "Invite not found or already used." });
+    return res.status(404).json({
+      success: false,
+      message: "Invite not found or already used.",
+    });
   }
 
   if (new Date(data.expires_at) < new Date()) {
-    return res.status(410).json({ success: false, message: "This invite has expired." });
+    return res.status(410).json({
+      success: false,
+      message: "This invite has expired.",
+    });
   }
 
   res.json({ success: true, email: data.email, role: data.role });
@@ -46,10 +55,16 @@ export async function getInviteByToken(req: Request, res: Response) {
 
 export async function acceptInvite(req: Request, res: Response) {
   const { token } = req.params;
-  const { fullName, password } = req.body as { fullName?: string; password?: string };
+  const { fullName, password } = req.body as {
+    fullName?: string;
+    password?: string;
+  };
 
   if (!fullName || !password || password.length < 8) {
-    return res.status(400).json({ success: false, message: "fullName and a password of at least 8 characters are required." });
+    return res.status(400).json({
+      success: false,
+      message: "fullName and a password of at least 8 characters are required.",
+    });
   }
 
   const { data: invite, error: inviteError } = await supabaseAdmin
@@ -60,22 +75,32 @@ export async function acceptInvite(req: Request, res: Response) {
     .single();
 
   if (inviteError || !invite) {
-    return res.status(404).json({ success: false, message: "Invite not found or already used." });
+    return res.status(404).json({
+      success: false,
+      message: "Invite not found or already used.",
+    });
   }
 
   if (new Date(invite.expires_at) < new Date()) {
-    return res.status(410).json({ success: false, message: "This invite has expired." });
+    return res.status(410).json({
+      success: false,
+      message: "This invite has expired.",
+    });
   }
 
-  const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
-    email: invite.email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: fullName },
-  });
+  const { data: created, error: createError } =
+    await supabaseAdmin.auth.admin.createUser({
+      email: invite.email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
 
   if (createError || !created.user) {
-    return res.status(500).json({ success: false, message: createError?.message ?? "Failed to create user." });
+    return res.status(500).json({
+      success: false,
+      message: createError?.message ?? "Failed to create user.",
+    });
   }
 
   const { error: updateError } = await supabaseAdmin
@@ -93,4 +118,18 @@ export async function acceptInvite(req: Request, res: Response) {
     .eq("id", invite.id);
 
   res.status(201).json({ success: true, message: "Account created successfully." });
+}
+
+// GET /api/v1/staff-invites — admin only. Lists all invites.
+export async function listInvites(_req: Request, res: Response) {
+  const { data, error } = await supabaseAdmin
+    .from("staff_invites")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  res.json({ success: true, invites: data });
 }

@@ -26,3 +26,34 @@ export async function listStaff(): Promise<{ success: boolean; staff: StaffMembe
   const res = await fetch(`${API_BASE}/api/v1/staff`, { headers: await authHeaders() });
   return res.json();
 }
+export interface StaffInvite {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export async function listInvites(): Promise<{
+  success: boolean;
+  invites: StaffInvite[];
+  message?: string;
+}> {
+  const res = await fetch(`${API_BASE}/api/v1/staff-invites`, {
+    headers: await authHeaders(),
+  });
+  return res.json();
+}
+
+export async function createInvite(
+  email: string,
+  role: "staff" | "admin"
+): Promise<{ success: boolean; inviteLink?: string; message?: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/staff-invites`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ email, role }),
+  });
+  return res.json();
+}
