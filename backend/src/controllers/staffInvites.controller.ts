@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabaseClient.js";
+import { logActivity } from "../services/auditLog.service.js";
+
+
 
 export async function createInvite(req: Request, res: Response) {
   const { email, role } = req.body as { email?: string; role?: string };
@@ -22,7 +25,7 @@ export async function createInvite(req: Request, res: Response) {
   }
 
   const inviteLink = `http://localhost:5173/staff/accept-invite?token=${data.token}`;
-
+  await logActivity(req.user!.id, `sent a staff invite to ${email} (role: ${role})`, "staff_invites", data.id);
   res.status(201).json({ success: true, invite: data, inviteLink });
 }
 

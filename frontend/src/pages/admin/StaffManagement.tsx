@@ -3,6 +3,8 @@ import {
   listStaff,
   listInvites,
   createInvite,
+  updateStaffRole,
+  toggleStaffActive,
   type StaffMember,
   type StaffInvite,
 } from "@/services/staff";
@@ -23,13 +25,32 @@ const inviteStatusToBadge: Record<string, "success" | "warning" | "error" | "inf
 function DirectoryTab() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadStaff() {
     listStaff().then((res) => {
       if (res.success) setStaff(res.staff);
       setLoading(false);
     });
+  }
+
+  useEffect(() => {
+    loadStaff();
   }, []);
+
+  async function handleRoleChange(userId: string, newRole: string) {
+    setUpdatingId(userId);
+    await updateStaffRole(userId, newRole);
+    setUpdatingId(null);
+    loadStaff();
+  }
+
+  async function handleToggleActive(userId: string, currentlyActive: boolean) {
+    setUpdatingId(userId);
+    await toggleStaffActive(userId, !currentlyActive);
+    setUpdatingId(null);
+    loadStaff();
+  }
 
   if (loading) return <p className="text-neutral-700">Loading staff directory...</p>;
 
@@ -47,9 +68,33 @@ function DirectoryTab() {
                 Joined {new Date(member.created_at).toLocaleDateString()}
               </p>
             </div>
-            <Badge status={roleToBadge[member.role] ?? "neutral"}>
-              {member.role}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge status={roleToBadge[member.role] ?? "neutral"}>
+                {member.role}
+              </Badge>
+              <select
+                className="rounded-sm border border-neutral-200 px-2 py-1 text-sm"
+                value={member.role}
+                disabled={updatingId === member.id}
+                onChange={(e) => handleRoleChange(member.id, e.target.value)}
+              >
+                <option value="staff">staff</option>
+                <option value="admin">admin</option>
+                <option value="super_admin">super_admin</option>
+                <option value="customer">customer (demote)</option>
+              </select>
+              <Button
+                size="sm"
+                variant={member.is_active === false ? "primary" : "destructive"}
+                disabled={updatingId === member.id}
+                onClick={() => handleToggleActive(member.id, member.is_active !== false)}
+              >
+                {member.is_active === false ? "Reactivate" : "Deactivate"}
+              </Button>
+              {updatingId === member.id && (
+                <span className="text-xs text-neutral-400">Saving...</span>
+              )}
+            </div>
           </div>
         </Card>
       ))}

@@ -5,10 +5,13 @@ const navItems = [
   { label: "Banquet & Events",          href: "/admin/banquet" },
   { label: "Conference & Meetings",     href: "/admin/conference" },
   { label: "Guests / CRM",             href: "#" },
-  { label: "Staff & Roles",            href: "#" },
+{ label: "Staff & Roles", href: "/admin/staff" },
   { label: "Reports & Analytics",      href: "/admin/reports" },
   { label: "Settings",                 href: "#" },
   { label: "Payments",                 href: "/admin/payments" },
+  { label: "Audit Log", href: "/admin/audit-log" },
+
+
 
 ];
 

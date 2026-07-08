@@ -18,12 +18,16 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
-    .select("role")
+    .select("role, is_active")
     .eq("id", userData.user.id)
     .single();
 
   if (profileError || !profile) {
     return res.status(401).json({ success: false, message: "No matching profile found for this user." });
+  }
+
+  if (!profile.is_active) {
+    return res.status(403).json({ success: false, message: "This account has been deactivated." });
   }
 
   req.user = {

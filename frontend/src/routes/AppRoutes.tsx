@@ -25,7 +25,7 @@ import { ConferenceRoomDetail } from "@/pages/public/ConferenceRoomDetail";
 import { ConferenceManagement } from "@/pages/admin/ConferenceManagement";
 import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
 import { StaffManagement } from "@/pages/admin/StaffManagement";
-
+import { AuditLog } from "@/pages/admin/AuditLog";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -145,6 +145,11 @@ export function AppRoutes() {
       <Route path="/admin/payments" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
           <AdminLayout><PaymentsOverview /></AdminLayout>
+        </RoleBasedRoute>
+      } />
+      <Route path="/admin/audit-log" element={
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><AuditLog /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/settings" element={

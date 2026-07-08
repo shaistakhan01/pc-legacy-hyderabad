@@ -18,7 +18,7 @@ export function RoleBasedRoute({ children, allowedRoles }: RoleBasedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
-  if (!profile || !allowedRoles.includes(profile.role)) {
+  if (!profile || !allowedRoles.includes(profile.role) || !profile.is_active) {
     return <Navigate to="/" replace />;
   }
 
