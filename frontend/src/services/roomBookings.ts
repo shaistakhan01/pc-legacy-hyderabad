@@ -46,3 +46,27 @@ export async function createRoomBooking(payload: CreateBookingPayload) {
   });
   return res.json();
 }
+export interface StaffAssistedBookingPayload {
+  guestId: string;
+  roomTypeId: string;
+  checkIn: string;
+  checkOut: string;
+  numGuests: number;
+  specialRequests?: string;
+}
+
+export async function createStaffAssistedRoomBooking(payload: StaffAssistedBookingPayload) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const res = await fetch(`${API_BASE}/api/v1/room-bookings/staff-assisted`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}

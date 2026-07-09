@@ -26,6 +26,9 @@ import { ConferenceManagement } from "@/pages/admin/ConferenceManagement";
 import { PaymentsOverview } from "@/pages/admin/PaymentsOverview";
 import { StaffManagement } from "@/pages/admin/StaffManagement";
 import { AuditLog } from "@/pages/admin/AuditLog";
+import { GuestManagement } from "@/pages/admin/GuestManagement";
+import { GuestDetail } from "@/pages/admin/GuestDetail";
+import { StaffAssistedRoomBooking } from "@/pages/admin/StaffAssistedRoomBooking";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -129,7 +132,12 @@ export function AppRoutes() {
       } />
       <Route path="/admin/guests" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
-          <AdminLayout><Placeholder pageName="Guests / CRM" /></AdminLayout>
+          <AdminLayout><GuestManagement /></AdminLayout>
+        </RoleBasedRoute>
+      } />
+      <Route path="/admin/guests/:guestId" element={
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><GuestDetail /></AdminLayout>
         </RoleBasedRoute>
       } />
       <Route path="/admin/staff" element={
@@ -155,6 +163,11 @@ export function AppRoutes() {
       <Route path="/admin/settings" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
           <AdminLayout><Placeholder pageName="Settings" /></AdminLayout>
+        </RoleBasedRoute>
+      } />
+      <Route path="/admin/guests/:guestId/book-room" element={
+        <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+          <AdminLayout><StaffAssistedRoomBooking /></AdminLayout>
         </RoleBasedRoute>
       } />
 
