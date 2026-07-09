@@ -70,12 +70,14 @@ export async function createGuest(req: Request, res: Response) {
 // PATCH /api/v1/guests/:id — staff/admin only.
 export async function updateGuest(req: Request, res: Response) {
   const { id } = req.params;
-  const { fullName, phone, email, idProofType, idProofNumber } = req.body as {
+  const { fullName, phone, email, idProofType, idProofNumber, notes, tags } = req.body as {
     fullName?: string;
     phone?: string;
     email?: string;
     idProofType?: string;
     idProofNumber?: string;
+    notes?: string;
+    tags?: string[];
   };
 
   const { data, error } = await supabaseAdmin
@@ -86,6 +88,8 @@ export async function updateGuest(req: Request, res: Response) {
       ...(email !== undefined && { email }),
       ...(idProofType !== undefined && { id_proof_type: idProofType }),
       ...(idProofNumber !== undefined && { id_proof_number: idProofNumber }),
+      ...(notes !== undefined && { notes }),
+      ...(tags !== undefined && { tags }),
     })
     .eq("id", id)
     .select()
@@ -97,6 +101,7 @@ export async function updateGuest(req: Request, res: Response) {
 
   res.json({ success: true, guest: data });
 }
+
 // GET /api/v1/guests/:id/bookings — staff/admin only.
 export async function getGuestBookings(req: Request, res: Response) {
   const { id } = req.params;

@@ -16,6 +16,8 @@ export function GuestDetail() {
   const [isUploading, setIsUploading] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
   const [bookings, setBookings] = useState<GuestBooking[]>([]);
+  const [notes, setNotes] = useState("");
+  const [tagsText, setTagsText] = useState("");
 
   function loadGuest() {
     if (!guestId) return;
@@ -25,6 +27,8 @@ export function GuestDetail() {
         setFullName(res.guest.full_name);
         setPhone(res.guest.phone ?? "");
         setEmail(res.guest.email ?? "");
+        setNotes(res.guest.notes ?? "");
+        setTagsText((res.guest.tags ?? []).join(", "));
       }
     });
   }
@@ -46,7 +50,13 @@ export function GuestDetail() {
 
     setIsSaving(true);
     setSavedMessage("");
-    const result = await updateGuest(guestId, { fullName, phone, email });
+    const result = await updateGuest(guestId, {
+      fullName,
+      phone,
+      email,
+      notes,
+      tags: tagsText.split(",").map((t) => t.trim()).filter(Boolean),
+    });
     setIsSaving(false);
 
     if (result.success) {
@@ -84,6 +94,22 @@ export function GuestDetail() {
             <Input label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
             <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-neutral-900">Notes</label>
+              <textarea
+                className="rounded-sm border border-neutral-200 px-3 py-2 text-sm"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Preferences, special requirements, VIP status, etc."
+              />
+            </div>
+            <Input
+              label="Tags (comma-separated)"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+              placeholder="e.g. VIP, repeat guest, allergy: nuts"
+            />
             <Button type="submit" isLoading={isSaving}>Save Changes</Button>
             {savedMessage && <p className="text-sm text-success">{savedMessage}</p>}
           </form>

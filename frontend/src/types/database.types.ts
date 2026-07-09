@@ -268,7 +268,9 @@ export type Database = {
           id: string
           id_proof_number: string | null
           id_proof_type: string | null
+          notes: string | null
           phone: string | null
+          tags: string[]
         }
         Insert: {
           created_at?: string
@@ -278,7 +280,9 @@ export type Database = {
           id?: string
           id_proof_number?: string | null
           id_proof_type?: string | null
+          notes?: string | null
           phone?: string | null
+          tags?: string[]
         }
         Update: {
           created_at?: string
@@ -288,7 +292,9 @@ export type Database = {
           id?: string
           id_proof_number?: string | null
           id_proof_type?: string | null
+          notes?: string | null
           phone?: string | null
+          tags?: string[]
         }
         Relationships: [
           {

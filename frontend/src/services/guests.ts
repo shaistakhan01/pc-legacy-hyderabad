@@ -41,6 +41,8 @@ export interface GuestPayload {
   email?: string;
   idProofType?: string;
   idProofNumber?: string;
+  notes?: string;
+  tags?: string[];
 }
 
 export async function createGuest(payload: GuestPayload): Promise<{ success: boolean; guest?: Guest; message?: string }> {
