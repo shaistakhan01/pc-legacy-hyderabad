@@ -16,7 +16,7 @@ export async function logActivity(
       action,
       entity_type: entityType,
       entity_id: entityId,
-      metadata: metadata ?? null,
+      metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null,
     });
   } catch (err) {
     console.error("Failed to write audit log:", err);

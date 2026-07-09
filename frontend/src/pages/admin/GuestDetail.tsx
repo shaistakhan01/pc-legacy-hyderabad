@@ -1,9 +1,9 @@
 import React from "react";
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getGuest, updateGuest, type Guest } from "@/services/guests";
+import { getGuest, updateGuest, fetchGuestBookings, type Guest, type GuestBooking } from "@/services/guests";
 import { listGuestDocuments, uploadGuestDocument, type GuestDocument } from "@/services/guestDocuments";
-import { Card, Input, Button } from "@/components/common";
+import { Card, Input, Button, Badge } from "@/components/common";
 
 export function GuestDetail() {
   const { guestId } = useParams<{ guestId: string }>();
@@ -15,6 +15,7 @@ export function GuestDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [bookings, setBookings] = useState<GuestBooking[]>([]);
 
   function loadGuest() {
     if (!guestId) return;
@@ -36,6 +37,7 @@ export function GuestDetail() {
   useEffect(() => {
     loadGuest();
     loadDocuments();
+    if (guestId) fetchGuestBookings(guestId).then((res) => res.success && setBookings(res.bookings));
   }, [guestId]);
 
   async function handleSave(e: FormEvent) {
@@ -104,6 +106,32 @@ export function GuestDetail() {
           </div>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <h3 className="mb-4 font-heading text-lg text-neutral-900">Booking History</h3>
+        <div className="flex flex-col gap-3">
+          {bookings.map((b) => (
+            <div key={b.id} className="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <div>
+                <p className="text-sm font-medium text-neutral-900">
+                  {b.module_type} · Ref: {b.reference_number}
+                </p>
+                <p className="text-xs text-neutral-400">
+                  {b.room_bookings && `Room ${b.room_bookings.rooms?.room_number} · ${b.room_bookings.check_in} → ${b.room_bookings.check_out}`}
+                  {b.restaurant_reservations && `${b.restaurant_reservations.reservation_date} at ${b.restaurant_reservations.reservation_time}`}
+                  {b.banquet_bookings && `${b.banquet_bookings.event_halls?.name} · ${b.banquet_bookings.event_date}`}
+                  {b.conference_bookings && `${b.conference_bookings.conference_rooms?.name} · ${b.conference_bookings.date}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge status="neutral">{b.status}</Badge>
+                <span className="text-sm font-semibold text-primary">₹{b.total_amount}</span>
+              </div>
+            </div>
+          ))}
+          {bookings.length === 0 && <p className="text-sm text-neutral-700">No bookings yet.</p>}
+        </div>
+      </Card>
     </div>
   );
 }

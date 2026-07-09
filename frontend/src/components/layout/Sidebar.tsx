@@ -1,15 +1,15 @@
 const navItems = [
-  { label: "Dashboard",                href: "/admin" },
+  { label: "Dashboard",                 href: "/admin" },
   { label: "Room & Booking Management", href: "/admin/rooms" },
   { label: "Restaurant & Tables",       href: "/admin/restaurant" },
   { label: "Banquet & Events",          href: "/admin/banquet" },
   { label: "Conference & Meetings",     href: "/admin/conference" },
-  { label: "Guests / CRM",             href: "#" },
-{ label: "Staff & Roles", href: "/admin/staff" },
-  { label: "Reports & Analytics",      href: "/admin/reports" },
-  { label: "Settings",                 href: "#" },
-  { label: "Payments",                 href: "/admin/payments" },
-  { label: "Audit Log", href: "/admin/audit-log" },
+{ label: "Guests / CRM",                href: "/admin/guests" },
+{ label: "Staff & Roles",               href: "/admin/staff" },
+  { label: "Reports & Analytics",       href: "/admin/reports" },
+  { label: "Settings",                  href: "#" },
+  { label: "Payments",                  href: "/admin/payments" },
+  { label: "Audit Log",                 href: "/admin/audit-log" },
 
 
 
