@@ -1,7 +1,7 @@
 import React from "react";
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getGuest, updateGuest, fetchGuestBookings, type Guest, type GuestBooking } from "@/services/guests";
+import { getGuest, updateGuest, fetchGuestBookings, fetchGuestStats, type Guest, type GuestBooking } from "@/services/guests";
 import { listGuestDocuments, uploadGuestDocument, type GuestDocument } from "@/services/guestDocuments";
 import { Card, Input, Button, Badge } from "@/components/common";
 
@@ -18,6 +18,7 @@ export function GuestDetail() {
   const [bookings, setBookings] = useState<GuestBooking[]>([]);
   const [notes, setNotes] = useState("");
   const [tagsText, setTagsText] = useState("");
+  const [stats, setStats] = useState<{ totalSpend: number; visitCount: number } | null>(null);
 
   function loadGuest() {
     if (!guestId) return;
@@ -42,6 +43,7 @@ export function GuestDetail() {
     loadGuest();
     loadDocuments();
     if (guestId) fetchGuestBookings(guestId).then((res) => res.success && setBookings(res.bookings));
+    if (guestId) fetchGuestStats(guestId).then((res) => res.success && setStats({ totalSpend: res.totalSpend, visitCount: res.visitCount }));
   }, [guestId]);
 
   async function handleSave(e: FormEvent) {
@@ -82,6 +84,19 @@ export function GuestDetail() {
   return (
     <div>
       <h1 className="mb-6 font-heading text-2xl text-primary">{guest.full_name}</h1>
+
+      {stats && (
+        <div className="mb-4 flex gap-4">
+          <Card className="px-4 py-2">
+            <p className="text-xs text-neutral-700">Total Spend</p>
+            <p className="text-lg font-semibold text-primary">₹{stats.totalSpend}</p>
+          </Card>
+          <Card className="px-4 py-2">
+            <p className="text-xs text-neutral-700">Total Visits</p>
+            <p className="text-lg font-semibold text-primary">{stats.visitCount}</p>
+          </Card>
+        </div>
+      )}
 
       <Link to={`/admin/guests/${guestId}/book-room`} className="mb-4 inline-block text-sm text-primary hover:underline">
         + Book a room for this guest

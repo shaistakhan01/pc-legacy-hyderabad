@@ -124,3 +124,22 @@ export async function getGuestBookings(req: Request, res: Response) {
 
   res.json({ success: true, bookings: data });
 }
+// GET /api/v1/guests/:id/stats — staff/admin only.
+export async function getGuestStats(req: Request, res: Response) {
+  const { id } = req.params;
+
+  const { data, error } = await supabaseAdmin
+    .from("bookings")
+    .select("total_amount, status")
+    .eq("guest_id", id);
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  const completedBookings = (data ?? []).filter((b) => b.status !== "cancelled");
+  const totalSpend = completedBookings.reduce((sum, b) => sum + Number(b.total_amount), 0);
+  const visitCount = completedBookings.length;
+
+  res.json({ success: true, totalSpend, visitCount });
+}

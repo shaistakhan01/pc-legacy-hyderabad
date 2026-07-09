@@ -85,3 +85,9 @@ export async function fetchGuestBookings(
   });
   return res.json();
 }
+export async function fetchGuestStats(
+  guestId: string
+): Promise<{ success: boolean; totalSpend: number; visitCount: number; message?: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/guests/${guestId}/stats`, { headers: await authHeaders() });
+  return res.json();
+}
