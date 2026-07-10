@@ -56,3 +56,16 @@ export async function fetchOccupancy(startDate: string, endDate: string): Promis
   const res = await fetch(`${API_BASE}/api/v1/reports/occupancy?${params}`, { headers: await authHeaders() });
   return res.json();
 }
+export interface BookingTrendPoint {
+  date: string;
+  count: number;
+}
+
+export async function fetchBookingTrend(
+  startDate: string,
+  endDate: string
+): Promise<{ success: boolean; trend: BookingTrendPoint[]; message?: string }> {
+  const params = new URLSearchParams({ startDate, endDate });
+  const res = await fetch(`${API_BASE}/api/v1/reports/booking-trend?${params}`, { headers: await authHeaders() });
+  return res.json();
+}

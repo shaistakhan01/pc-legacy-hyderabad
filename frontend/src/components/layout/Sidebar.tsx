@@ -12,7 +12,7 @@ const navItems = [
   { label: "Audit Log",                 href: "/admin/audit-log" },
   { label: "Revenue Report", href: "/admin/reports/revenue" },
   { label: "Occupancy Report", href: "/admin/reports/occupancy" },
-
+  { label: "Booking Trends", href: "/admin/reports/trends" },
 ];
 
 // Admin persistent left sidebar — design doc §3.1.B.

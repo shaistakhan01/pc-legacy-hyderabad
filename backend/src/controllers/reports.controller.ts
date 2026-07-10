@@ -159,3 +159,35 @@ export async function getOccupancy(req: Request, res: Response) {
     conferenceBookingCount: conferenceCount.count ?? 0,
   });
 }
+// GET /api/v1/reports/booking-trend?startDate=&endDate= — staff/admin.
+// Booking COUNT by day (not revenue) — complements the revenue trend
+// from 11.3 with a volume-over-time view.
+export async function getBookingTrend(req: Request, res: Response) {
+  const { startDate, endDate } = req.query as DateRangeQuery;
+
+  if (!startDate || !endDate) {
+    return res.status(400).json({ success: false, message: "startDate and endDate are required." });
+  }
+
+  const { data: bookings, error } = await supabaseAdmin
+    .from("bookings")
+    .select("created_at")
+    .gte("created_at", startDate)
+    .lte("created_at", `${endDate}T23:59:59`)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  const countByDay = new Map<string, number>();
+
+  for (const b of bookings ?? []) {
+    const day = b.created_at.slice(0, 10);
+    countByDay.set(day, (countByDay.get(day) ?? 0) + 1);
+  }
+
+  const trend = Array.from(countByDay.entries()).map(([date, count]) => ({ date, count }));
+
+  res.json({ success: true, trend });
+}

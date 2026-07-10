@@ -32,7 +32,7 @@ import { StaffAssistedRoomBooking } from "@/pages/admin/StaffAssistedRoomBooking
 import { DashboardOverview } from "@/pages/admin/DashboardOverview";
 import { RevenueReport } from "@/pages/admin/RevenueReport";
 import { OccupancyReport } from "@/pages/admin/OccupancyReport";
-
+import { BookingTrendsReport } from "@/pages/admin/BookingTrendsReport";
 
 
 // Routing skeleton — Technical Plan Phase 1.4.
@@ -163,6 +163,11 @@ export function AppRoutes() {
       <Route path="/admin/reports/occupancy" element={
       <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
         <AdminLayout><OccupancyReport /></AdminLayout>
+      </RoleBasedRoute>
+    } />
+    <Route path="/admin/reports/trends" element={
+      <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+        <AdminLayout><BookingTrendsReport /></AdminLayout>
       </RoleBasedRoute>
     } />
       <Route path="/admin/payments" element={
