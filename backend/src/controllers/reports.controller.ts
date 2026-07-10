@@ -55,3 +55,35 @@ export async function getSummary(req: Request, res: Response) {
     bookingsByStatus,
   });
 }
+// GET /api/v1/reports/revenue-trend?startDate=&endDate= — staff/admin.
+// Groups revenue by calendar day for charting.
+export async function getRevenueTrend(req: Request, res: Response) {
+  const { startDate, endDate } = req.query as DateRangeQuery;
+
+  if (!startDate || !endDate) {
+    return res.status(400).json({ success: false, message: "startDate and endDate are required." });
+  }
+
+  const { data: bookings, error } = await supabaseAdmin
+    .from("bookings")
+    .select("total_amount, status, created_at")
+    .gte("created_at", startDate)
+    .lte("created_at", `${endDate}T23:59:59`)
+    .neq("status", "cancelled")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  const revenueByDay = new Map<string, number>();
+
+  for (const b of bookings ?? []) {
+    const day = b.created_at.slice(0, 10);
+    revenueByDay.set(day, (revenueByDay.get(day) ?? 0) + Number(b.total_amount));
+  }
+
+  const trend = Array.from(revenueByDay.entries()).map(([date, revenue]) => ({ date, revenue }));
+
+  res.json({ success: true, trend });
+}

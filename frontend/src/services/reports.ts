@@ -27,3 +27,16 @@ export async function fetchSummary(startDate: string, endDate: string): Promise<
   const res = await fetch(`${API_BASE}/api/v1/reports/summary?${params}`, { headers: await authHeaders() });
   return res.json();
 }
+export interface RevenueTrendPoint {
+  date: string;
+  revenue: number;
+}
+
+export async function fetchRevenueTrend(
+  startDate: string,
+  endDate: string
+): Promise<{ success: boolean; trend: RevenueTrendPoint[]; message?: string }> {
+  const params = new URLSearchParams({ startDate, endDate });
+  const res = await fetch(`${API_BASE}/api/v1/reports/revenue-trend?${params}`, { headers: await authHeaders() });
+  return res.json();
+}
