@@ -29,6 +29,11 @@ import { AuditLog } from "@/pages/admin/AuditLog";
 import { GuestManagement } from "@/pages/admin/GuestManagement";
 import { GuestDetail } from "@/pages/admin/GuestDetail";
 import { StaffAssistedRoomBooking } from "@/pages/admin/StaffAssistedRoomBooking";
+import { DashboardOverview } from "@/pages/admin/DashboardOverview";
+
+
+
+
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -107,9 +112,9 @@ export function AppRoutes() {
       {/* ── Admin portal routes (role-protected) ──────────────────── */}
       <Route path="/admin" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
-          <AdminLayout><Placeholder pageName="Admin Dashboard" /></AdminLayout>
-        </RoleBasedRoute>
-      } />
+          <AdminLayout><DashboardOverview /></AdminLayout>
+          </RoleBasedRoute>
+        } />
       <Route path="/admin/rooms" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
           <AdminLayout><RoomManagement /></AdminLayout>
