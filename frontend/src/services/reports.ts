@@ -40,3 +40,19 @@ export async function fetchRevenueTrend(
   const res = await fetch(`${API_BASE}/api/v1/reports/revenue-trend?${params}`, { headers: await authHeaders() });
   return res.json();
 }
+export interface OccupancyReport {
+  success: boolean;
+  roomOccupancyRate: number;
+  totalRooms: number;
+  bookedRoomNights: number;
+  restaurantBookingCount: number;
+  banquetBookingCount: number;
+  conferenceBookingCount: number;
+  message?: string;
+}
+
+export async function fetchOccupancy(startDate: string, endDate: string): Promise<OccupancyReport> {
+  const params = new URLSearchParams({ startDate, endDate });
+  const res = await fetch(`${API_BASE}/api/v1/reports/occupancy?${params}`, { headers: await authHeaders() });
+  return res.json();
+}

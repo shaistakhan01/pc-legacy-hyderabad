@@ -31,7 +31,7 @@ import { GuestDetail } from "@/pages/admin/GuestDetail";
 import { StaffAssistedRoomBooking } from "@/pages/admin/StaffAssistedRoomBooking";
 import { DashboardOverview } from "@/pages/admin/DashboardOverview";
 import { RevenueReport } from "@/pages/admin/RevenueReport";
-
+import { OccupancyReport } from "@/pages/admin/OccupancyReport";
 
 
 
@@ -160,6 +160,11 @@ export function AppRoutes() {
           <AdminLayout><RevenueReport /></AdminLayout>
         </RoleBasedRoute>
       } />
+      <Route path="/admin/reports/occupancy" element={
+      <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
+        <AdminLayout><OccupancyReport /></AdminLayout>
+      </RoleBasedRoute>
+    } />
       <Route path="/admin/payments" element={
         <RoleBasedRoute allowedRoles={["staff", "admin", "super_admin"]}>
           <AdminLayout><PaymentsOverview /></AdminLayout>
