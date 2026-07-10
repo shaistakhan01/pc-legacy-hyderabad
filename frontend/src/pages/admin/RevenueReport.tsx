@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { fetchSummary, fetchRevenueTrend, type ReportSummary, type RevenueTrendPoint } from "@/services/reports";
 import { DateRangeFilter, type DateRange } from "@/components/admin/DateRangeFilter";
-import { Card } from "@/components/common";
+import { Card, Button } from "@/components/common";
+import { exportToCsv } from "@/utils/exportCsv";
+
 
 function isoDateDaysAgo(days: number): string {
   const d = new Date();
@@ -29,6 +31,12 @@ export function RevenueReport() {
       }
     );
   }
+  function handleExport() {
+    exportToCsv(
+      `revenue-report-${range.startDate}-to-${range.endDate}.csv`,
+      trend.map((point) => ({ date: point.date, revenue: point.revenue }))
+    );
+  }
 
   useEffect(() => {
     loadData();
@@ -39,6 +47,11 @@ export function RevenueReport() {
       <h1 className="mb-6 font-heading text-2xl text-primary">Revenue Report</h1>
 
       <DateRangeFilter range={range} onChange={setRange} onApply={loadData} />
+      <div className="mb-6">
+        <Button onClick={handleExport} variant="secondary" disabled={trend.length === 0}>
+          Export CSV
+        </Button>
+      </div>
 
       {loading ? (
         <p className="text-neutral-700">Loading revenue data...</p>
