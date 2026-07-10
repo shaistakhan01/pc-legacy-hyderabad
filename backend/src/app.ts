@@ -12,6 +12,10 @@ import paymentsRoutes from "./routes/payments.routes.js";
 import staffRoutes from "./routes/staff.routes.js";
 import guestsRoutes from "./routes/guests.routes.js";
 import guestDocumentsRoutes from "./routes/guestDocuments.routes.js";
+import reportsRoutes from "./routes/reports.routes.js";
+
+
+
 
 export function createApp(): Application {
   const app = express();
@@ -37,6 +41,9 @@ export function createApp(): Application {
   app.use("/api/v1/staff", staffRoutes);
   app.use("/api/v1/guests", guestsRoutes);
   app.use("/api/v1/guests/:id/documents", guestDocumentsRoutes);
+  app.use("/api/v1/reports", reportsRoutes);
+
+
 
 
   app.use((req: Request, res: Response) => {
