@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, Badge, Tabs } from "@/components/common";
+import { cancelBooking } from "@/services/bookings";
+import { Modal, Input, Button } from "@/components/common";
 
 interface RoomBookingRow {
   id: string;
@@ -68,12 +70,66 @@ const statusToBadge: Record<string, "success" | "warning" | "error" | "info" | "
   cancelled: "error",
 };
 
+function CancelBookingModal({
+  bookingId,
+  isOpen,
+  onClose,
+  onCancelled,
+}: {
+  bookingId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onCancelled: () => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [errorText, setErrorText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleConfirm() {
+    setIsSubmitting(true);
+    setErrorText("");
+    const result = await cancelBooking(bookingId, reason);
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setErrorText(result.message ?? "Failed to cancel booking.");
+      return;
+    }
+
+    setReason("");
+    onCancelled();
+    onClose();
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Cancel Booking">
+      <p className="mb-4 text-sm text-neutral-700">
+        Are you sure you want to cancel this booking? This cannot be undone.
+      </p>
+      <Input
+        label="Reason (optional)"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="e.g. Change of plans"
+      />
+      {errorText && <p className="mt-2 text-sm text-error">{errorText}</p>}
+      <div className="mt-4 flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>Keep Booking</Button>
+        <Button variant="destructive" isLoading={isSubmitting} onClick={handleConfirm}>
+          Confirm Cancellation
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
 function RoomBookingsTab() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<RoomBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadBookings() {
     if (!user) return;
     supabase
       .from("bookings")
@@ -87,6 +143,10 @@ function RoomBookingsTab() {
         if (!error && data) setBookings(data as unknown as RoomBookingRow[]);
         setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    loadBookings();
   }, [user]);
 
   if (loading) return <p className="text-neutral-700">Loading...</p>;
@@ -120,8 +180,19 @@ function RoomBookingsTab() {
                   {booking.status.replace("_", " ")}
                 </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+                {["confirmed", "pending"].includes(booking.status) && (
+                  <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
+                    Cancel
+                  </Button>
+                )}
               </div>
             </div>
+            <CancelBookingModal
+              bookingId={booking.id}
+              isOpen={cancellingId === booking.id}
+              onClose={() => setCancellingId(null)}
+              onCancelled={loadBookings}
+            />
           </Card>
         );
       })}
@@ -133,8 +204,9 @@ function RestaurantBookingsTab() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<RestaurantBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadBookings() {
     if (!user) return;
     supabase
       .from("bookings")
@@ -148,6 +220,10 @@ function RestaurantBookingsTab() {
         if (!error && data) setBookings(data as unknown as RestaurantBookingRow[]);
         setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    loadBookings();
   }, [user]);
 
   if (loading) return <p className="text-neutral-700">Loading...</p>;
@@ -173,10 +249,23 @@ function RestaurantBookingsTab() {
                   Ref: {booking.reference_number}
                 </p>
               </div>
-              <Badge status={statusToBadge[booking.status] ?? "neutral"}>
-                {booking.status.replace("_", " ")}
-              </Badge>
+              <div className="flex flex-col items-end gap-2">
+                <Badge status={statusToBadge[booking.status] ?? "neutral"}>
+                  {booking.status.replace("_", " ")}
+                </Badge>
+                {["confirmed", "pending"].includes(booking.status) && (
+                  <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
             </div>
+            <CancelBookingModal
+              bookingId={booking.id}
+              isOpen={cancellingId === booking.id}
+              onClose={() => setCancellingId(null)}
+              onCancelled={loadBookings}
+            />
           </Card>
         );
       })}
@@ -188,8 +277,9 @@ function BanquetBookingsTab() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<BanquetBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadBookings() {
     if (!user) return;
     supabase
       .from("bookings")
@@ -203,6 +293,10 @@ function BanquetBookingsTab() {
         if (!error && data) setBookings(data as unknown as BanquetBookingRow[]);
         setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    loadBookings();
   }, [user]);
 
   if (loading) return <p className="text-neutral-700">Loading...</p>;
@@ -235,8 +329,19 @@ function BanquetBookingsTab() {
                   {booking.status.replace("_", " ")}
                 </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+                {["confirmed", "pending"].includes(booking.status) && (
+                  <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
+                    Cancel
+                  </Button>
+                )}
               </div>
             </div>
+            <CancelBookingModal
+              bookingId={booking.id}
+              isOpen={cancellingId === booking.id}
+              onClose={() => setCancellingId(null)}
+              onCancelled={loadBookings}
+            />
           </Card>
         );
       })}
@@ -248,8 +353,9 @@ function ConferenceBookingsTab() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<ConferenceBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadBookings() {
     if (!user) return;
     supabase
       .from("bookings")
@@ -263,6 +369,10 @@ function ConferenceBookingsTab() {
         if (!error && data) setBookings(data as unknown as ConferenceBookingRow[]);
         setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    loadBookings();
   }, [user]);
 
   if (loading) return <p className="text-neutral-700">Loading...</p>;
@@ -299,8 +409,19 @@ function ConferenceBookingsTab() {
                   {booking.status.replace("_", " ")}
                 </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+                {["confirmed", "pending"].includes(booking.status) && (
+                  <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
+                    Cancel
+                  </Button>
+                )}
               </div>
             </div>
+            <CancelBookingModal
+              bookingId={booking.id}
+              isOpen={cancellingId === booking.id}
+              onClose={() => setCancellingId(null)}
+              onCancelled={loadBookings}
+            />
           </Card>
         );
       })}
