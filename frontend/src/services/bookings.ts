@@ -20,3 +20,13 @@ export async function cancelBooking(
   });
   return res.json();
 }
+export async function fetchInvoiceUrl(bookingId: string): Promise<{ success: boolean; url?: string; message?: string }> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const res = await fetch(`${API_BASE}/api/v1/bookings/${bookingId}/invoice`, {
+    headers: { Authorization: `Bearer ${session?.access_token}` },
+  });
+  return res.json();
+}

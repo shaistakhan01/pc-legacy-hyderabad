@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, Badge, Tabs } from "@/components/common";
-import { cancelBooking } from "@/services/bookings";
+import { cancelBooking, fetchInvoiceUrl } from "@/services/bookings";
 import { Modal, Input, Button } from "@/components/common";
 
 interface RoomBookingRow {
@@ -69,6 +69,13 @@ const statusToBadge: Record<string, "success" | "warning" | "error" | "info" | "
   completed: "neutral",
   cancelled: "error",
 };
+
+async function handleDownloadInvoice(bookingId: string) {
+  const result = await fetchInvoiceUrl(bookingId);
+  if (result.success && result.url) {
+    window.open(result.url, "_blank");
+  }
+}
 
 function CancelBookingModal({
   bookingId,
@@ -180,6 +187,9 @@ function RoomBookingsTab() {
                   {booking.status.replace("_", " ")}
                 </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+                <Button size="sm" variant="secondary" onClick={() => handleDownloadInvoice(booking.id)}>
+                  Invoice
+                </Button>
                 {["confirmed", "pending"].includes(booking.status) && (
                   <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
                     Cancel
@@ -253,6 +263,9 @@ function RestaurantBookingsTab() {
                 <Badge status={statusToBadge[booking.status] ?? "neutral"}>
                   {booking.status.replace("_", " ")}
                 </Badge>
+                <Button size="sm" variant="secondary" onClick={() => handleDownloadInvoice(booking.id)}>
+                  Invoice
+                </Button>
                 {["confirmed", "pending"].includes(booking.status) && (
                   <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
                     Cancel
@@ -329,6 +342,9 @@ function BanquetBookingsTab() {
                   {booking.status.replace("_", " ")}
                 </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+                <Button size="sm" variant="secondary" onClick={() => handleDownloadInvoice(booking.id)}>
+                  Invoice
+                </Button>
                 {["confirmed", "pending"].includes(booking.status) && (
                   <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
                     Cancel
@@ -409,6 +425,9 @@ function ConferenceBookingsTab() {
                   {booking.status.replace("_", " ")}
                 </Badge>
                 <span className="font-semibold text-primary">₹{booking.total_amount}</span>
+                <Button size="sm" variant="secondary" onClick={() => handleDownloadInvoice(booking.id)}>
+                  Invoice
+                </Button>
                 {["confirmed", "pending"].includes(booking.status) && (
                   <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
                     Cancel
