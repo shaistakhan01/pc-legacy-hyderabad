@@ -33,7 +33,7 @@ import { DashboardOverview } from "@/pages/admin/DashboardOverview";
 import { RevenueReport } from "@/pages/admin/RevenueReport";
 import { OccupancyReport } from "@/pages/admin/OccupancyReport";
 import { BookingTrendsReport } from "@/pages/admin/BookingTrendsReport";
-
+import { ModifyRoomBooking } from "@/pages/account/ModifyRoomBooking";
 
 // Routing skeleton — Technical Plan Phase 1.4.
 //
@@ -101,6 +101,11 @@ export function AppRoutes() {
       <Route path="/account/bookings/:bookingId" element={
         <ProtectedRoute>
           <PublicLayout><Placeholder pageName="Booking Detail" /></PublicLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/account/bookings/:bookingId/modify" element={
+        <ProtectedRoute>
+          <PublicLayout><ModifyRoomBooking /></PublicLayout>
         </ProtectedRoute>
       } />
       <Route path="/account/profile" element={

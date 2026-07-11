@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, Badge, Tabs } from "@/components/common";
 import { cancelBooking, fetchInvoiceUrl } from "@/services/bookings";
 import { Modal, Input, Button } from "@/components/common";
+import { Link } from "react-router-dom";
 
 interface RoomBookingRow {
   id: string;
@@ -190,6 +191,11 @@ function RoomBookingsTab() {
                 <Button size="sm" variant="secondary" onClick={() => handleDownloadInvoice(booking.id)}>
                   Invoice
                 </Button>
+                {booking.status === "confirmed" && (
+                  <Link to={`/account/bookings/${booking.id}/modify`}>
+                    <Button size="sm" variant="secondary">Modify</Button>
+                  </Link>
+                )}
                 {["confirmed", "pending"].includes(booking.status) && (
                   <Button size="sm" variant="destructive" onClick={() => setCancellingId(booking.id)}>
                     Cancel

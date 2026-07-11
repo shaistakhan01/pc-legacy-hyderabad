@@ -70,3 +70,18 @@ export async function createStaffAssistedRoomBooking(payload: StaffAssistedBooki
   });
   return res.json();
 }
+export async function modifyRoomBooking(bookingId: string, checkIn: string, checkOut: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const res = await fetch(`${API_BASE}/api/v1/room-bookings/${bookingId}/modify`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify({ checkIn, checkOut }),
+  });
+  return res.json();
+}

@@ -215,3 +215,84 @@ export async function createStaffAssistedBooking(req: Request, res: Response) {
 
   res.status(201).json({ success: true, booking, roomBooking });
 }
+// PATCH /api/v1/room-bookings/:bookingId/modify — owner only.
+export async function modifyBooking(req: Request, res: Response) {
+  const { bookingId } = req.params;
+  const { checkIn, checkOut } = req.body as { checkIn?: string; checkOut?: string };
+
+  if (!checkIn || !checkOut) {
+    return res.status(400).json({ success: false, message: "checkIn and checkOut are required." });
+  }
+
+  const { data: booking, error: bookingError } = await supabaseAdmin
+    .from("bookings")
+    .select("*, room_bookings(*)")
+    .eq("id", bookingId)
+    .single();
+
+  if (bookingError || !booking) {
+    return res.status(404).json({ success: false, message: "Booking not found." });
+  }
+
+  if (booking.user_id !== req.user!.id) {
+    return res.status(403).json({ success: false, message: "You do not have permission to modify this booking." });
+  }
+
+  if (booking.status !== "confirmed") {
+    return res.status(400).json({ success: false, message: "Only confirmed bookings can be modified." });
+  }
+
+ const roomBookingDetail = (booking as unknown as { room_bookings: { room_id: string } | null }).room_bookings;
+
+  if (!roomBookingDetail) {
+    return res.status(500).json({ success: false, message: "Could not find room booking details for this booking." });
+  }
+
+  const { data: roomType } = await supabaseAdmin
+    .from("rooms")
+    .select("room_type_id")
+    .eq("id", roomBookingDetail.room_id)
+    .single();
+
+  if (!roomType) {
+    return res.status(500).json({ success: false, message: "Could not determine room type for this booking." });
+  }
+
+  let availability;
+  try {
+    availability = await checkRoomAvailability(roomType.room_type_id, checkIn, checkOut);
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err instanceof Error ? err.message : "Availability check failed." });
+  }
+
+  if (!availability.available) {
+    return res.status(409).json({ success: false, message: "No rooms available for the new dates." });
+  }
+
+  const priceDifference = availability.totalAmount - Number(booking.total_amount);
+
+  await supabaseAdmin
+    .from("room_bookings")
+    .update({ check_in: checkIn, check_out: checkOut, room_id: availability.roomId })
+    .eq("booking_id", bookingId);
+
+  const { data: updatedBooking, error: updateError } = await supabaseAdmin
+    .from("bookings")
+    .update({ total_amount: availability.totalAmount })
+    .eq("id", bookingId)
+    .select()
+    .single();
+
+  if (updateError || !updatedBooking) {
+    return res.status(500).json({ success: false, message: updateError?.message ?? "Failed to update booking." });
+  }
+
+  res.json({
+    success: true,
+    booking: updatedBooking,
+    priceDifference,
+    note: priceDifference !== 0
+      ? "The new total differs from what was originally paid. Please contact the front desk to settle the difference."
+      : undefined,
+  });
+}
