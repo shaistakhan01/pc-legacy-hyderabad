@@ -11,6 +11,8 @@ interface BookingRow {
   reference_number: string;
   status: string;
   total_amount: number;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
   banquet_bookings: {
     event_date: string;
     guest_count: number;
@@ -292,8 +294,8 @@ function AllBookingsTab() {
   useEffect(() => {
     supabase
       .from("bookings")
-      .select(
-        `id, reference_number, status, total_amount,
+     .select(
+        `id, reference_number, status, total_amount, cancelled_at, cancellation_reason,
          banquet_bookings ( event_date, guest_count, event_halls ( name ) )`
       )
       .eq("module_type", "banquet")
@@ -315,11 +317,19 @@ function AllBookingsTab() {
                 </p>
                 <p className="text-xs text-neutral-400">Ref: {b.reference_number}</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Badge status={statusToBadge[b.status] ?? "neutral"}>
-                  {b.status}
-                </Badge>
-                <span className="font-semibold text-primary">₹{b.total_amount}</span>
+             <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-3">
+                  <Badge status={statusToBadge[b.status] ?? "neutral"}>
+                    {b.status}
+                  </Badge>
+                  <span className="font-semibold text-primary">₹{b.total_amount}</span>
+                </div>
+                {b.status === "cancelled" && b.cancelled_at && (
+                  <p className="mt-1 text-xs text-neutral-400">
+                    Cancelled {new Date(b.cancelled_at).toLocaleDateString()}
+                    {b.cancellation_reason && ` — "${b.cancellation_reason}"`}
+                  </p>
+                )}
               </div>
             </div>
           </Card>

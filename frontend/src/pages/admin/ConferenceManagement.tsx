@@ -10,6 +10,8 @@ interface BookingRow {
   reference_number: string;
   status: string;
   total_amount: number;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
   conference_bookings: {
     date: string;
     start_time: string;
@@ -105,7 +107,7 @@ function AllBookingsTab() {
   useEffect(() => {
     supabase
       .from("bookings")
-      .select(`id, reference_number, status, total_amount, conference_bookings ( date, start_time, end_time, attendee_count, conference_rooms ( name ) )`)
+     .select(`id, reference_number, status, total_amount, cancelled_at, cancellation_reason, conference_bookings ( date, start_time, end_time, attendee_count, conference_rooms ( name ) )`)
       .eq("module_type", "conference")
       .order("created_at", { ascending: false })
       .then(({ data }) => data && setBookings(data as unknown as BookingRow[]));
@@ -124,9 +126,17 @@ function AllBookingsTab() {
                 </p>
                 <p className="text-xs text-neutral-400">Ref: {b.reference_number} · {detail?.attendee_count} attendees</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Badge status={statusToBadge[b.status] ?? "neutral"}>{b.status}</Badge>
-                <span className="font-semibold text-primary">₹{b.total_amount}</span>
+             <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-3">
+                  <Badge status={statusToBadge[b.status] ?? "neutral"}>{b.status}</Badge>
+                  <span className="font-semibold text-primary">₹{b.total_amount}</span>
+                </div>
+                {b.status === "cancelled" && b.cancelled_at && (
+                  <p className="mt-1 text-xs text-neutral-400">
+                    Cancelled {new Date(b.cancelled_at).toLocaleDateString()}
+                    {b.cancellation_reason && ` — "${b.cancellation_reason}"`}
+                  </p>
+                )}
               </div>
             </div>
           </Card>

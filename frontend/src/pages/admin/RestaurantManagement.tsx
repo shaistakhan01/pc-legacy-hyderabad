@@ -10,6 +10,8 @@ interface ReservationRow {
   id: string;
   reference_number: string;
   status: string;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
   restaurant_reservations: {
     reservation_date: string;
     reservation_time: string;
@@ -199,8 +201,8 @@ function AllReservationsTab() {
   useEffect(() => {
     supabase
       .from("bookings")
-      .select(
-        `id, reference_number, status,
+     .select(
+        `id, reference_number, status, cancelled_at, cancellation_reason,
          restaurant_reservations ( reservation_date, reservation_time, party_size, restaurant_tables ( table_number ) )`
       )
       .eq("module_type", "restaurant")
@@ -221,7 +223,15 @@ function AllReservationsTab() {
                 </p>
                 <p className="text-xs text-neutral-400">Ref: {r.reference_number} · Party of {detail?.party_size}</p>
               </div>
-              <Badge status={statusToBadge[r.status] ?? "neutral"}>{r.status}</Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge status={statusToBadge[r.status] ?? "neutral"}>{r.status}</Badge>
+                {r.status === "cancelled" && r.cancelled_at && (
+                  <p className="mt-1 text-xs text-neutral-400">
+                    Cancelled {new Date(r.cancelled_at).toLocaleDateString()}
+                    {r.cancellation_reason && ` — "${r.cancellation_reason}"`}
+                  </p>
+                )}
+              </div>
             </div>
           </Card>
         );
