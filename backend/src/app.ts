@@ -13,7 +13,7 @@ import staffRoutes from "./routes/staff.routes.js";
 import guestsRoutes from "./routes/guests.routes.js";
 import guestDocumentsRoutes from "./routes/guestDocuments.routes.js";
 import reportsRoutes from "./routes/reports.routes.js";
-
+import bookingsRoutes from "./routes/bookings.routes.js";
 
 
 
@@ -42,7 +42,7 @@ export function createApp(): Application {
   app.use("/api/v1/guests", guestsRoutes);
   app.use("/api/v1/guests/:id/documents", guestDocumentsRoutes);
   app.use("/api/v1/reports", reportsRoutes);
-
+  app.use("/api/v1/bookings", bookingsRoutes);
 
 
 

@@ -105,9 +105,13 @@ export type Database = {
       }
       bookings: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           guest_id: string | null
           id: string
+          invoice_path: string | null
           module_type: string
           reference_number: string
           status: string
@@ -116,9 +120,13 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           guest_id?: string | null
           id?: string
+          invoice_path?: string | null
           module_type: string
           reference_number: string
           status?: string
@@ -127,9 +135,13 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           guest_id?: string | null
           id?: string
+          invoice_path?: string | null
           module_type?: string
           reference_number?: string
           status?: string
@@ -138,6 +150,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_guest_id_fkey"
             columns: ["guest_id"]
