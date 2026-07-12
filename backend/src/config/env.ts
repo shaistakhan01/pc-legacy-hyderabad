@@ -24,7 +24,6 @@ export const env = {
   STRIPE_SECRET_KEY: requireEnv("STRIPE_SECRET_KEY"),
   STRIPE_CURRENCY: process.env.STRIPE_CURRENCY ?? "usd",
 
-
-
-
+  RESEND_API_KEY: requireEnv("RESEND_API_KEY"),
+  EMAIL_FROM: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
 };

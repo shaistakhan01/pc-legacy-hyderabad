@@ -15,8 +15,6 @@ import guestDocumentsRoutes from "./routes/guestDocuments.routes.js";
 import reportsRoutes from "./routes/reports.routes.js";
 import bookingsRoutes from "./routes/bookings.routes.js";
 
-
-
 export function createApp(): Application {
   const app = express();
 
