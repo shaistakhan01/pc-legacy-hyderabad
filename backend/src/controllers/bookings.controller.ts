@@ -3,7 +3,7 @@ import { supabaseAdmin } from "../config/supabaseClient.js";
 import { stripe } from "../config/stripe.js";
 import { checkCancellationPolicy } from "../services/cancellationPolicy.service.js";
 import { generateInvoicePdf } from "../services/invoice.service.js";
-
+import { sendEmail, buildEmailHtml } from "../services/email.service.js";
 
 
 // POST /api/v1/bookings/:bookingId/cancel — owner or staff/admin.
@@ -79,8 +79,32 @@ export async function cancelBooking(req: Request, res: Response) {
     return res.status(500).json({ success: false, message: updateError?.message ?? "Failed to cancel booking." });
   }
 
-  res.json({ success: true, booking: updated });
-}
+// Fire-and-forget cancellation confirmation email
+  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(
+    updated.user_id ?? ""
+  );
+  if (userData.user?.email) {
+    const html = buildEmailHtml(
+      "Booking Cancelled",
+      `
+      <p>Dear ${userData.user.user_metadata?.full_name ?? "Guest"},</p>
+      <p>Your booking has been cancelled as requested.</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px;">
+        <tr><td style="padding:6px 0;color:#4A4A4A;">Reference</td><td style="padding:6px 0;font-weight:600;">${updated.reference_number}</td></tr>
+        <tr><td style="padding:6px 0;color:#4A4A4A;">Module</td><td style="padding:6px 0;text-transform:capitalize;">${updated.module_type}</td></tr>
+        <tr><td style="padding:6px 0;color:#4A4A4A;">Cancelled At</td><td style="padding:6px 0;">${new Date().toLocaleString()}</td></tr>
+        ${updated.cancellation_reason ? `<tr><td style="padding:6px 0;color:#4A4A4A;">Reason</td><td style="padding:6px 0;">${updated.cancellation_reason}</td></tr>` : ""}
+      </table>
+      <p style="margin-top:16px;">If a refund is applicable, it will be processed within 5–7 business days to your original payment method.</p>
+      <p>If you did not request this cancellation, please contact us immediately.</p>
+      `
+    );
+    sendEmail(
+      userData.user.email,
+      `Booking Cancelled — ${updated.reference_number}`,
+      html
+    );
+  }}
 // GET /api/v1/bookings/:bookingId/invoice — owner or staff/admin.
 // Generates the PDF on first request and caches its storage path;
 // subsequent requests just re-sign a fresh URL to the same file.
