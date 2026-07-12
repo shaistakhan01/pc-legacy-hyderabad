@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { checkTableAvailability } from "../services/restaurantAvailability.service.js";
 import { supabaseAdmin } from "../config/supabaseClient.js";
 import { generateReferenceNumber } from "../services/roomAvailability.service.js";
+import { sendRestaurantConfirmation } from "../services/emailTemplates.service.js";
 
 // GET /api/v1/restaurant-reservations/availability?date=&time=&partySize=
 // Public — no auth required.
@@ -88,6 +89,25 @@ export async function createReservation(req: Request, res: Response) {
   if (reservationError || !reservation) {
     await supabaseAdmin.from("bookings").delete().eq("id", booking.id);
     return res.status(500).json({ success: false, message: reservationError?.message ?? "Failed to create reservation." });
+  }
+
+  // Fire-and-forget confirmation email
+  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(req.user!.id);
+  if (userData.user?.email) {
+    const { data: tableData } = await supabaseAdmin
+      .from("restaurant_tables")
+      .select("table_number")
+      .eq("id", reservation.table_id)
+      .single();
+
+    sendRestaurantConfirmation(userData.user.email, {
+      guestName: userData.user.user_metadata?.full_name ?? "Guest",
+      referenceNumber: booking.reference_number,
+      tableNumber: tableData?.table_number ?? "",
+      reservationDate: reservation.reservation_date,
+      reservationTime: reservation.reservation_time,
+      partySize: reservation.party_size,
+    });
   }
 
   res.status(201).json({ success: true, booking, reservation });

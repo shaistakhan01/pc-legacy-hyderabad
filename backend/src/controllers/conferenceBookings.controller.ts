@@ -3,6 +3,7 @@ import { supabaseAdmin } from "../config/supabaseClient.js";
 import { checkConferenceAvailability } from "../services/conferenceAvailability.service.js";
 import { generateReferenceNumber } from "../services/roomAvailability.service.js";
 import { verifyPayment } from "../services/paymentVerification.service.js";
+import { sendConferenceConfirmation } from "../services/emailTemplates.service.js";
 
 // GET /api/v1/conference-bookings/availability
 // Public — no auth required.
@@ -128,5 +129,26 @@ export async function createBooking(req: Request, res: Response) {
     method: "stripe",
   });
 
+  // Fire-and-forget confirmation email
+  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(req.user!.id);
+  if (userData.user?.email) {
+    const { data: roomData } = await supabaseAdmin
+      .from("conference_rooms")
+      .select("name")
+      .eq("id", roomId)
+      .single();
+
+    sendConferenceConfirmation(userData.user.email, {
+      guestName: userData.user.user_metadata?.full_name ?? "Guest",
+      referenceNumber: booking.reference_number,
+      roomName: roomData?.name ?? "Conference Room",
+      date: conferenceBooking.date,
+      startTime: conferenceBooking.start_time,
+      endTime: conferenceBooking.end_time,
+      attendeeCount: conferenceBooking.attendee_count,
+      totalAmount: booking.total_amount,
+    });
+  }
+  
   res.status(201).json({ success: true, booking, conferenceBooking });
 }

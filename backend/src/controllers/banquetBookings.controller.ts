@@ -6,6 +6,7 @@ import {
 } from "../services/banquetAvailability.service.js";
 import { generateReferenceNumber } from "../services/roomAvailability.service.js";
 import { verifyPayment } from "../services/paymentVerification.service.js";
+import { sendBanquetConfirmation } from "../services/emailTemplates.service.js";
 
 // GET /api/v1/banquet-bookings/availability
 // Public — no auth required.
@@ -162,6 +163,28 @@ export async function createBooking(req: Request, res: Response) {
     amount: totalAmount,
     method: "stripe",
   });
+
+  // Fire-and-forget confirmation email
+  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(req.user!.id);
+  if (userData.user?.email) {
+    const { data: hallData } = await supabaseAdmin
+      .from("event_halls")
+      .select("name")
+      .eq("id", hallId)
+      .single();
+
+    sendBanquetConfirmation(userData.user.email, {
+      guestName: userData.user.user_metadata?.full_name ?? "Guest",
+      referenceNumber: booking.reference_number,
+      hallName: hallData?.name ?? "Venue",
+      eventDate: banquetBooking.event_date,
+      startTime: banquetBooking.start_time,
+      endTime: banquetBooking.end_time,
+      eventType: banquetBooking.event_type ?? "Event",
+      guestCount: banquetBooking.guest_count,
+      totalAmount: booking.total_amount,
+    });
+  }
 
   res.status(201).json({ success: true, booking, banquetBooking });
 }

@@ -35,34 +35,40 @@ export function StripeCheckoutModal({
   const [errorText, setErrorText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setIsProcessing(true);
-    setErrorText("");
-
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
-      setIsProcessing(false);
-      return;
-    }
-
-    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: { card: cardElement },
-    });
-
-    setIsProcessing(false);
-
-    if (error) {
-      setErrorText(error.message ?? "Payment failed. Please try again.");
-      return;
-    }
-
-    if (paymentIntent?.status === "succeeded") {
-      onSuccess(paymentIntent.id);
-    }
+async function handleSubmit(e: FormEvent) {
+  e.preventDefault();
+  if (!stripe || !elements) {
+    setErrorText("Payment system not ready. Please wait a moment and try again.");
+    return;
   }
+
+  const cardElement = elements.getElement(CardElement);
+  if (!cardElement) {
+    setErrorText("Card input not found. Please close and reopen the payment form.");
+    return;
+  }
+
+  setIsProcessing(true);
+  setErrorText("");
+
+  const { error, paymentIntent } = await stripe.confirmCardPayment(
+    clientSecret,
+    {
+      payment_method: { card: cardElement },
+    }
+  );
+
+  setIsProcessing(false);
+
+  if (error) {
+    setErrorText(error.message ?? "Payment failed. Please try again.");
+    return;
+  }
+
+  if (paymentIntent?.status === "succeeded") {
+    onSuccess(paymentIntent.id);
+  }
+}
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Complete Payment">

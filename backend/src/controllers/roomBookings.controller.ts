@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabaseClient.js";
 import { checkRoomAvailability, generateReferenceNumber } from "../services/roomAvailability.service.js";
 import { verifyPayment } from "../services/paymentVerification.service.js";
+import { sendRoomBookingConfirmation } from "../services/emailTemplates.service.js";
+
 
 // GET /api/v1/room-bookings/availability?roomTypeId=&checkIn=&checkOut=
 // Public — no auth required, just checking if dates are bookable.
@@ -135,6 +137,27 @@ export async function createBooking(req: Request, res: Response) {
     amount: availability.totalAmount,
     method: "stripe",
   });
+
+  // Fire-and-forget confirmation email
+  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(req.user!.id);
+  if (userData.user?.email) {
+    const { data: roomData } = await supabaseAdmin
+      .from("rooms")
+      .select("room_number, room_types ( name )")
+      .eq("id", roomBooking.room_id)
+      .single();
+
+    sendRoomBookingConfirmation(userData.user.email, {
+      guestName: userData.user.user_metadata?.full_name ?? "Guest",
+      referenceNumber: booking.reference_number,
+      roomType: (roomData?.room_types as { name: string } | null)?.name ?? "Room",
+      roomNumber: roomData?.room_number ?? "",
+      checkIn: roomBooking.check_in,
+      checkOut: roomBooking.check_out,
+      numGuests: roomBooking.num_guests,
+      totalAmount: booking.total_amount,
+    });
+  }
 
   res.status(201).json({ success: true, booking, roomBooking });
 }
