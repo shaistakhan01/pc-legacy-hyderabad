@@ -2,7 +2,6 @@ import cron from "node-cron";
 import { supabaseAdmin } from "../config/supabaseClient.js";
 import { sendEmail, buildEmailHtml } from "../services/email.service.js";
 
-// Returns tomorrow's date in YYYY-MM-DD format.
 function getTomorrow(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -25,6 +24,13 @@ async function remindRoomBookings(tomorrow: string): Promise<void> {
 
     const { data: userData } = await supabaseAdmin.auth.admin.getUserById(b.user_id);
     if (!userData.user?.email) continue;
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("reminders_enabled")
+      .eq("id", b.user_id)
+      .single();
+    if (profile && profile.reminders_enabled === false) continue;
 
     const html = buildEmailHtml(
       "Your check-in is tomorrow!",
@@ -61,6 +67,13 @@ async function remindRestaurantReservations(tomorrow: string): Promise<void> {
     const { data: userData } = await supabaseAdmin.auth.admin.getUserById(b.user_id);
     if (!userData.user?.email) continue;
 
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("reminders_enabled")
+      .eq("id", b.user_id)
+      .single();
+    if (profile && profile.reminders_enabled === false) continue;
+
     const html = buildEmailHtml(
       "Your table reservation is tomorrow!",
       `
@@ -96,6 +109,13 @@ async function remindBanquetBookings(tomorrow: string): Promise<void> {
 
     const { data: userData } = await supabaseAdmin.auth.admin.getUserById(b.user_id);
     if (!userData.user?.email) continue;
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("reminders_enabled")
+      .eq("id", b.user_id)
+      .single();
+    if (profile && profile.reminders_enabled === false) continue;
 
     const html = buildEmailHtml(
       "Your event is tomorrow!",
@@ -135,6 +155,13 @@ async function remindConferenceBookings(tomorrow: string): Promise<void> {
     const { data: userData } = await supabaseAdmin.auth.admin.getUserById(b.user_id);
     if (!userData.user?.email) continue;
 
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("reminders_enabled")
+      .eq("id", b.user_id)
+      .single();
+    if (profile && profile.reminders_enabled === false) continue;
+
     const html = buildEmailHtml(
       "Your meeting is tomorrow!",
       `
@@ -154,8 +181,6 @@ async function remindConferenceBookings(tomorrow: string): Promise<void> {
   }
 }
 
-// Runs all four reminder checks. Exported so the test route in 13.5
-// verification can trigger it on demand without waiting for 8 AM.
 export async function runReminders(): Promise<void> {
   const tomorrow = getTomorrow();
   console.log(`[Reminders] Running for date: ${tomorrow}`);
@@ -168,8 +193,6 @@ export async function runReminders(): Promise<void> {
   console.log("[Reminders] Done.");
 }
 
-// Schedules the job to run every day at 8:00 AM server time.
-// node-cron expression: "minute hour day month weekday"
 export function scheduleReminderJob(): void {
   cron.schedule("0 8 * * *", () => {
     console.log("[Reminders] Scheduled job triggered at 8:00 AM");
