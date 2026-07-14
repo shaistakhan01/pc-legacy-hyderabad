@@ -18,6 +18,26 @@ export function buildEmailHtml(title: string, bodyHtml: string): string {
   `;
 }
 
+// Converts an HTML email body to a plain-text fallback — strips all HTML
+// tags and collapses whitespace so email clients that can't render HTML
+// still show readable content instead of raw markup.
+export function buildEmailText(title: string, bodyHtml: string): string {
+  const stripped = bodyHtml
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<\/tr>/gi, "\n")
+    .replace(/<\/td>/gi, "\t")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return `PC Legacy Hyderabad\n${title}\n\n${stripped}\n\nHyderabad, Telangana, India — This is an automated message, please do not reply directly.`;
+}
+
 // Fire-and-forget — a failed email send never blocks or fails the
 // booking/cancellation action it's describing.
 export async function sendEmail(
@@ -31,6 +51,7 @@ export async function sendEmail(
       to,
       subject,
       html,
+      text: buildEmailText(subject, html),
     });
   } catch (err) {
     console.error(`Failed to send email to ${to}:`, err);
