@@ -352,24 +352,77 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          is_available: boolean
           name: string
           price: number
+          section_id: string | null
         }
         Insert: {
           category?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
+          is_available?: boolean
           name: string
           price: number
+          section_id?: string | null
         }
         Update: {
           category?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
+          is_available?: boolean
           name?: string
           price?: number
+          section_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "menu_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_sections: {
+        Row: {
+          availability_text: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_enabled: boolean
+          name: string
+          price: number | null
+          sort_order: number
+          timing_text: string | null
+          type: string
+        }
+        Insert: {
+          availability_text?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          name: string
+          price?: number | null
+          sort_order?: number
+          timing_text?: string | null
+          type: string
+        }
+        Update: {
+          availability_text?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          name?: string
+          price?: number | null
+          sort_order?: number
+          timing_text?: string | null
+          type?: string
         }
         Relationships: []
       }

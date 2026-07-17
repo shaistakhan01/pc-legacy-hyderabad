@@ -15,7 +15,8 @@ import guestsRoutes from "./routes/guests.routes.js";
 import guestDocumentsRoutes from "./routes/guestDocuments.routes.js";
 import reportsRoutes from "./routes/reports.routes.js";
 import bookingsRoutes from "./routes/bookings.routes.js";
-import { runReminders } from "./jobs/sendReminders.job.js";
+// import { runReminders } from "./jobs/sendReminders.job.js";
+import menuSectionsRoutes from "./routes/menuSections.routes.js";
 
 export function createApp(): Application {
   const app = express();
@@ -53,6 +54,8 @@ export function createApp(): Application {
   app.use("/api/v1/guests/:id/documents", guestDocumentsRoutes);
   app.use("/api/v1/reports", reportsRoutes);
   app.use("/api/v1/bookings", bookingsRoutes);
+  app.use("/api/v1/menu-sections", menuSectionsRoutes);
+
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({
